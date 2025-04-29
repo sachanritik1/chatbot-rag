@@ -1,0 +1,28 @@
+# Streamlit UI
+streamlit
+
+# LangChain core + integrations
+langchain
+langchain-community
+openai
+
+# Embedding model
+sentence-transformers
+
+# Vector store
+chromadb
+
+# PDF loading
+pypdf
+
+# Movie processing (not fully used in your code, but referenced)
+moviepy
+
+openai-whisper
+torch  # required by whisper for inference
+
+# Other required dependencies
+tqdm
+numpy
+
+python-dotenv
