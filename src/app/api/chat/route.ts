@@ -4,6 +4,7 @@ import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { z } from "zod";
 
 const promptTemplate = `
 You are a helpful assistant that answers user questions strictly based on the provided context extracted from a audio, video or PDF file.
@@ -16,7 +17,17 @@ Answer: Do not use any outside knowledge or assumptions. Stick only to the given
 `;
 
 export async function POST(req: NextRequest) {
-  const { query } = await req.json();
+  const body = await req.json();
+  const schema = z.object({ query: z.string().min(1, "Query is required") });
+  const parseResult = schema.safeParse(body);
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: parseResult.error.errors.map((e) => e.message).join(", ") },
+      { status: 400 }
+    );
+  }
+  const { query } = parseResult.data;
+
   const openAIApiKey = process.env.OPENAI_API_KEY;
   if (!openAIApiKey) {
     return NextResponse.json(
