@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { z } from "zod";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
+import { supabaseClient } from "@/server/db";
 
 const promptTemplate = `
 You are a helpful assistant that answers user questions strictly based on the provided context extracted from a audio, video or PDF file.
@@ -41,11 +41,6 @@ export async function POST(req: NextRequest) {
     model: "text-embedding-3-small",
   });
 
-  const vectorStore = new Chroma(embeddings, {
-    collectionName: "chat-bot-rag",
-    url: "http://localhost:8000",
-  });
-
   // Load OpenAI model
   const llm = new OpenAI({
     temperature: 0.7,
@@ -58,21 +53,36 @@ export async function POST(req: NextRequest) {
     template: promptTemplate,
     inputVariables: ["context", "question"],
   });
+
+  const refinePrompt = new PromptTemplate({
+    template: `You are a helpful assistant. Improve the following user question for better search relevance.
+
+    Original Question: {question}
+
+    Refined Question:`,
+    inputVariables: ["question"],
+  });
+
+  const refineChain = refinePrompt.pipe(llm);
+  const refinedQuery = await refineChain.invoke({ question: query });
+
   // Set up RetrievalQA chain
   const combineDocsChain = await createStuffDocumentsChain({
     llm,
     prompt,
   });
 
-  const qaChain = await createRetrievalChain({
-    combineDocsChain,
-
-    retriever: vectorStore.asRetriever({
-      searchType: "mmr",
-      searchKwargs: { fetchK: 10 },
-    }),
+  const vectorStore = await SupabaseVectorStore.fromExistingIndex(embeddings, {
+    client: supabaseClient,
+    tableName: "documents",
   });
 
-  const result = await qaChain.invoke({ input: query });
-  return NextResponse.json({ data: result, status: "success" });
+  const docs = await vectorStore.similaritySearch(refinedQuery, 2);
+
+  const finalResult = await combineDocsChain.invoke({
+    context: docs,
+    question: query,
+  });
+
+  return NextResponse.json({ data: finalResult, status: "success" });
 }
