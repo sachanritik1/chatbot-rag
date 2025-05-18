@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 
 export default function ChatPage() {
   const [question, setQuestion] = useState("");
@@ -16,56 +15,16 @@ export default function ChatPage() {
   const [uploadStatus, setUploadStatus] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const conversationId = searchParams.get("conversation_id") || "";
-  const userId = searchParams.get("user_id") || "";
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadStatus("Uploading and processing PDF...");
-    setError("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("user_id", userId);
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setUploadStatus(
-        `PDF processed successfully! Created ${data.chunks} chunks for searching.`
-      );
-      setMessages([
-        {
-          role: "bot",
-          content:
-            "I've processed your PDF. You can now ask questions about its content!",
-        },
-      ]);
-      router.replace(
-        `/chat?conversation_id=${data.conversation_id}&user_id=${userId}`
-      );
-    } catch (err) {
-      setError((err as Error).message || "Failed to process PDF");
-      setUploadStatus("");
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!conversationId || !userId) {
-      setError("Missing conversation or user ID.");
-      return;
-    }
+
     const schema = z.object({ query: z.string().min(1, "Query is required") });
     const parseResult = schema.safeParse({ query: question });
     if (!parseResult.success) {
@@ -77,18 +36,26 @@ export default function ChatPage() {
     const currentQuestion = question;
     setQuestion("");
     try {
+      setUploadStatus("Processing your question...");
+      const formData = new FormData();
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append("file", fileInputRef.current.files[0]); // attach the file
+      }
+      if (conversationId) {
+        formData.append("conversationId", conversationId);
+      }
+
+      formData.append("query", currentQuestion);
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: currentQuestion,
-          conversation_id: conversationId,
-          user_id: userId,
-        }),
+        body: formData,
       });
+
       const data = await res.json();
+      setUploadStatus("");
       const botMsg = data?.data || data?.error || "No answer returned";
       setMessages((msgs) => [...msgs, { role: "bot", content: botMsg }]);
+      setConversationId(data.conversationId);
     } catch (err: unknown) {
       const errorMessage =
         (err as { message?: string }).message || "Request failed";
@@ -109,7 +76,6 @@ export default function ChatPage() {
               accept=".pdf"
               className="hidden"
               ref={fileInputRef}
-              onChange={handleFileUpload}
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
@@ -163,11 +129,11 @@ export default function ChatPage() {
             onChange={(e) => setQuestion(e.target.value)}
             className="flex-1 rounded-full px-4 py-2 bg-gray-100 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder="Ask a question about the PDF..."
-            disabled={loading || !conversationId}
+            disabled={loading}
           />
           <Button
             type="submit"
-            disabled={loading || !question.trim() || !conversationId}
+            disabled={loading || !question.trim()}
             className="rounded-full px-6"
           >
             {loading ? (

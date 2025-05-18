@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
-import { supabaseClient } from "@/server/db";
+import { addDocumentsToStore } from "@/utils/vector-store";
+import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +12,35 @@ export async function POST(req: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
+
+    const supabase = await createClient();
+
+    const user = await supabase.auth.getUser();
+    const userId = user.data?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "No user_id provided" },
+        { status: 400 }
+      );
+    }
+
+    // Create a new conversation for this upload
+    const { data: conversation, error: convError } = await supabase
+      .from("conversations")
+      .insert([{ user_id: userId, title: file.name }])
+      .select()
+      .single();
+
+    if (convError || !conversation) {
+      return NextResponse.json(
+        { error: "Failed to create conversation" },
+        { status: 500 }
+      );
+    }
+    console.log("Conversation created:", conversation);
+
+    const conversationId = conversation.id;
 
     const loader = new WebPDFLoader(file);
 
@@ -24,28 +52,16 @@ export async function POST(req: NextRequest) {
       chunkOverlap: 100,
     });
 
-    const chunks = (await splitter.splitDocuments(docs)).map((doc) => {
-      delete doc.id;
-      return doc;
-    });
-
-    const embeddings = new OpenAIEmbeddings({
-      model: "text-embedding-3-small",
-      openAIApiKey: process.env.OPENAI_API_KEY,
-    });
-
-    const vectorStore = new SupabaseVectorStore(embeddings, {
-      client: supabaseClient,
-      tableName: "documents",
-    });
+    const chunks = await splitter.splitDocuments(docs);
 
     // Add documents to the vector store
-    await vectorStore.addDocuments(chunks);
+    await addDocumentsToStore(chunks, conversationId);
 
     return NextResponse.json({
       status: "success",
       message: "PDF processed successfully",
       chunks: chunks.length,
+      conversationId: conversationId,
     });
   } catch (error) {
     console.error("Error processing PDF:", error);

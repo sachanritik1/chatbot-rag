@@ -1,88 +1,187 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { z } from "zod";
+import {
+  ChatHistory,
+  createChat,
+  getChatHistoryByConversationId,
+} from "@/services/chats";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableMap, RunnableSequence } from "@langchain/core/runnables";
+import {
+  createConversation,
+  getConversationsByUserIdAndConversationId,
+} from "@/services/conversations";
+import { getUser } from "@/services/users";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { supabaseClient } from "@/server/db";
+import { createClient } from "@/utils/supabase/server";
 
-const promptTemplate = `
-You are a helpful assistant that answers user questions strictly based on the provided context extracted from a audio, video or PDF file.
-
-Context: {context}
-
-Question: {question}
-
-Answer: Do not use any outside knowledge or assumptions. Stick only to the given context.
-`;
+const schema = z.object({
+  query: z.string().min(1, "Query is required"),
+  conversationId: z.string().optional(),
+  file: z.instanceof(File).optional(),
+});
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const schema = z.object({ query: z.string().min(1, "Query is required") });
-  const parseResult = schema.safeParse(body);
-  if (!parseResult.success) {
-    return NextResponse.json(
-      { error: parseResult.error.errors.map((e) => e.message).join(", ") },
-      { status: 400 }
-    );
-  }
-  const { query } = parseResult.data;
+  try {
+    const user = await getUser();
+    const userId = user.data?.user?.id;
 
-  const openAIApiKey = process.env.OPENAI_API_KEY;
-  if (!openAIApiKey) {
+    if (!userId) {
+      return NextResponse.json(
+        { error: "No user_id provided" },
+        { status: 400 }
+      );
+    }
+
+    const formData = await req.formData();
+    const data = {
+      query: formData.get("query"),
+      conversationId: formData.get("conversationId") ?? undefined,
+      file: formData.get("file") ?? undefined,
+    };
+
+    const parseResult = schema.safeParse(data);
+
+    if (!parseResult.success) {
+      console.log("Validation error:", parseResult.error);
+
+      return NextResponse.json(
+        { error: parseResult.error.message || "Invalid input" },
+        { status: 400 }
+      );
+    }
+
+    console.log("Parsed data:", parseResult.data);
+
+    const { query } = parseResult.data;
+    let conversationId = parseResult.data.conversationId;
+    let chatHistory = [] as ChatHistory[];
+    const file = parseResult.data.file;
+    const vectorStore = await SupabaseVectorStore.fromDocuments(
+      [],
+      new OpenAIEmbeddings(),
+      {
+        client: await createClient(),
+        tableName: "documents", // or your vector table
+        queryName: "match_documents", // optional RPC name
+      }
+    );
+
+    if (!conversationId) {
+      // Create a new conversation if no conversationId is provided
+      const { data, error } = await createConversation(userId);
+      conversationId = data?.id;
+      if (!conversationId || error) {
+        return NextResponse.json(
+          { error: "Failed to create conversation" },
+          { status: 500 }
+        );
+      }
+    } else {
+      //check if the conversationId belongs to the user
+      const { data: conversation, error } =
+        await getConversationsByUserIdAndConversationId(userId, conversationId);
+      if (error || !conversation) {
+        return NextResponse.json(
+          { error: "Conversation not found" },
+          { status: 404 }
+        );
+      }
+      // Fetch chat history for this conversation
+      const { data } = await getChatHistoryByConversationId(conversationId, 10);
+      chatHistory = data || [];
+      console.log("Chat history:", chatHistory);
+    }
+
+    if (file) {
+      const loader = new WebPDFLoader(file);
+      const pages = await loader.load();
+      const enrichedPages = pages.map((doc, idx) => ({
+        pageContent: doc.pageContent,
+        metadata: {
+          page_number: idx + 1,
+          conversation_id: conversationId,
+          file_name: file.name,
+        },
+      }));
+
+      // Now split using LangChain splitter
+      const splitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 1000,
+        chunkOverlap: 200,
+      });
+      const splitDocs = await splitter.splitDocuments(enrichedPages);
+      await vectorStore.addDocuments(splitDocs);
+    }
+
+    const docs = await vectorStore.similaritySearch(query, 5, {
+      conversation_id: conversationId,
+    });
+    const fileContext =
+      docs.map((doc) => doc.pageContent).join("\n---\n") || "";
+
+    const formatMessages = (messages: ChatHistory[]) => {
+      return messages.map((message) => ({
+        role: message.sender,
+        content: message.message,
+      }));
+    };
+
+    // 1. Load LLM
+    const llm = new ChatOpenAI({ temperature: 0.2 });
+
+    type ChatInput = {
+      history: ChatHistory[];
+      question: string;
+      fileContext: string;
+    };
+
+    // 2. Format input
+    const formatInput = RunnableMap.from({
+      chat_history: (input: ChatInput) => formatMessages(input.history),
+      question: (input: ChatInput) => input.question,
+      fileContext: (input: ChatInput) => input.fileContext,
+    });
+
+    const prompt = PromptTemplate.fromTemplate(
+      `You are a helpful assistant. Use the following chat history and PDF context (if available) to answer the user’s last question.
+      Chat history: {chat_history}
+      User: {question}
+      PDF Context: {fileContext}
+      AI:`
+    );
+
+    // 3. Create chain
+    const chain = RunnableSequence.from([formatInput, prompt, llm]);
+
+    // 4. Call it
+    const result = await chain.invoke({
+      history: chatHistory,
+      question: query,
+      fileContext,
+    });
+
+    const assistantMessage = result.text;
+
+    // Store user message in chat_history
+    await createChat(conversationId, query, "user");
+
+    // Store assistant message in chat_history
+    await createChat(conversationId, assistantMessage, "assistant");
+
+    return NextResponse.json({
+      data: assistantMessage,
+      status: "success",
+      conversationId,
+    });
+  } catch (error) {
+    console.log("Error in chat API:", error);
     return NextResponse.json(
-      { error: "OPEN_AI_API_KEY not set" },
+      { error: "Something went wrong" },
       { status: 500 }
     );
   }
-
-  // Load Chroma vector DB
-  const embeddings = new OpenAIEmbeddings({
-    model: "text-embedding-3-small",
-  });
-
-  // Load OpenAI model
-  const llm = new OpenAI({
-    temperature: 0.7,
-    maxTokens: 512,
-    topP: 1,
-    verbose: false,
-  });
-
-  const prompt = new PromptTemplate({
-    template: promptTemplate,
-    inputVariables: ["context", "question"],
-  });
-
-  const refinePrompt = new PromptTemplate({
-    template: `You are a helpful assistant. Improve the following user question for better search relevance.
-
-    Original Question: {question}
-
-    Refined Question:`,
-    inputVariables: ["question"],
-  });
-
-  const refineChain = refinePrompt.pipe(llm);
-  const refinedQuery = await refineChain.invoke({ question: query });
-
-  // Set up RetrievalQA chain
-  const combineDocsChain = await createStuffDocumentsChain({
-    llm,
-    prompt,
-  });
-
-  const vectorStore = await SupabaseVectorStore.fromExistingIndex(embeddings, {
-    client: supabaseClient,
-    tableName: "documents",
-  });
-
-  const docs = await vectorStore.similaritySearch(refinedQuery, 2);
-
-  const finalResult = await combineDocsChain.invoke({
-    context: docs,
-    question: query,
-  });
-
-  return NextResponse.json({ data: finalResult, status: "success" });
 }
