@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     if (file) {
       const loader = new WebPDFLoader(file);
       const pages = await loader.load();
-      const enrichedPages = pages.map((doc, idx) => ({
+      const enrichedPages = pages.map((doc) => ({
         ...doc,
         metadata: {
           ...doc.metadata,
