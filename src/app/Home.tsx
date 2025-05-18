@@ -69,7 +69,7 @@ export default function ChatPage() {
     <div className="flex justify-center items-center">
       <div className="w-full max-w-2xl h-[80vh] flex flex-col rounded-2xl shadow-2xl bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
         <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-[#23272f]/60">
-          <span className="font-bold text-lg tracking-tight">PDF Chat</span>
+          <span className="font-bold text-lg tracking-tight">AI Chat</span>
           <div className="flex items-center gap-2">
             <input
               type="file"
@@ -95,7 +95,7 @@ export default function ChatPage() {
         <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-gray-400 select-none pt-16">
-              Start asking questions about your PDF...
+              Start asking questions to your AI...
             </div>
           ) : (
             messages.map((msg, i) => (
@@ -128,7 +128,7 @@ export default function ChatPage() {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             className="flex-1 rounded-full px-4 py-2 bg-gray-100 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Ask a question about the PDF..."
+            placeholder="Ask your question here..."
             disabled={loading}
           />
           <Button
