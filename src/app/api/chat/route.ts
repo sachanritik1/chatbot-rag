@@ -98,11 +98,10 @@ export async function POST(req: NextRequest) {
       const loader = new WebPDFLoader(file);
       const pages = await loader.load();
       const enrichedPages = pages.map((doc, idx) => ({
-        pageContent: doc.pageContent,
+        ...doc,
         metadata: {
-          page_number: idx + 1,
+          ...doc.metadata,
           conversation_id: conversationId,
-          file_name: file.name,
         },
       }));
 
@@ -115,9 +114,9 @@ export async function POST(req: NextRequest) {
       await vectorStore.addDocuments(splitDocs);
     }
 
-    const docs = await vectorStore.similaritySearch(query, 5, {
-      conversation_id: conversationId,
-    });
+    const docs = await vectorStore.similaritySearch(query, 4, (rpc) =>
+      rpc.filter("metadata->>conversation_id", "eq", conversationId)
+    );
 
     console.log("Docs found:", docs);
 

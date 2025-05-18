@@ -53,6 +53,7 @@ export default function ChatPage() {
 
       const data = await res.json();
       setUploadStatus("");
+      fileInputRef.current!.value = ""; // Clear the file input
       const botMsg = data?.data || data?.error || "No answer returned";
       setMessages((msgs) => [...msgs, { role: "bot", content: botMsg }]);
       setConversationId(data.conversationId);
