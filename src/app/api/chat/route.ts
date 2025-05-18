@@ -60,15 +60,11 @@ export async function POST(req: NextRequest) {
     let conversationId = parseResult.data.conversationId;
     let chatHistory = [] as ChatHistory[];
     const file = parseResult.data.file;
-    const vectorStore = await SupabaseVectorStore.fromDocuments(
-      [],
-      new OpenAIEmbeddings(),
-      {
-        client: await createClient(),
-        tableName: "documents", // or your vector table
-        queryName: "match_documents", // optional RPC name
-      }
-    );
+    const vectorStore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
+      client: await createClient(),
+      tableName: "documents", // or your vector table
+      queryName: "match_documents", // optional RPC name
+    });
 
     if (!conversationId) {
       // Create a new conversation if no conversationId is provided
@@ -96,6 +92,8 @@ export async function POST(req: NextRequest) {
       console.log("Chat history:", chatHistory);
     }
 
+    console.log("Conversation ID:", conversationId);
+
     if (file) {
       const loader = new WebPDFLoader(file);
       const pages = await loader.load();
@@ -120,6 +118,9 @@ export async function POST(req: NextRequest) {
     const docs = await vectorStore.similaritySearch(query, 5, {
       conversation_id: conversationId,
     });
+
+    console.log("Docs found:", docs);
+
     const fileContext =
       docs.map((doc) => doc.pageContent).join("\n---\n") || "";
 
