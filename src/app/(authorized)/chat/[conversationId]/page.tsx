@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import ChatPage from "../chat";
 import { tryCatch } from "@/utils/try-catch";
 import { getConversationById } from "@/services/conversations";
+import { getChatHistoryByConversationId } from "@/services/chats";
 
 type Props = {
   params: Promise<{
@@ -35,9 +36,20 @@ const Page = async ({ params }: Props) => {
   if (err || res.error) {
     return <ChatPage />;
   }
-
   const conversation = res?.data;
-  return <ChatPage title={conversation.title} />;
+  const [chatsResponse, chatError] = await tryCatch(
+    getChatHistoryByConversationId(conversationId),
+  );
+  if (chatError || chatsResponse.error) {
+    return <ChatPage />;
+  }
+  const messages =
+    chatsResponse.data.map((chat) => ({
+      role: chat.sender,
+      content: chat.message,
+      createdAt: chat.created_at,
+    })) || [];
+  return <ChatPage title={conversation.title} prevMessages={messages} />;
 };
 
 export default Page;

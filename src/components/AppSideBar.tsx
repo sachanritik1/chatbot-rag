@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 import { getAllConversationsByUserId } from "@/services/conversations";
@@ -13,6 +12,7 @@ import { redirect } from "next/navigation";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Suspense } from "react";
 import ConversationCard from "./ConversationCard";
+import NewConversationButton from "./NewConversationButton";
 
 const logout = async () => {
   "use server";
@@ -37,9 +37,7 @@ export default async function AppSideBar() {
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Conversations</h2>
-          <Button variant="ghost" size="icon" title="New Conversation">
-            <Plus className="h-5 w-5" />
-          </Button>
+          <NewConversationButton />
         </div>
       </SidebarHeader>
       <Suspense fallback={<div>Loading conversations...</div>}>

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const Page = async () => {
-  return <ChatPage />;
+  return <ChatPage title="Create a new conversation" />;
 };
 
 export default Page;
