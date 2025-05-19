@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AppSideBar from "@/components/AppSideBar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -13,8 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen  bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] dark:from-[#18181b] dark:to-[#23272f] transition-colors duration-300 p-2">
-        {children}
+      <body className="bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] dark:from-[#18181b] dark:to-[#23272f] transition-colors duration-300">
+        <SidebarProvider>
+          <AppSideBar />
+          <main className="flex-8/12">
+            <SidebarTrigger />
+            {children}
+          </main>
+        </SidebarProvider>
       </body>
     </html>
   );

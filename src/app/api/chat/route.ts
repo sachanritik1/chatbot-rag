@@ -17,6 +17,7 @@ import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@/utils/supabase/server";
+import { tryCatch } from "@/utils/try-catch";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
@@ -26,8 +27,15 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser();
-    const userId = user.data?.user?.id;
+    const [user, userError] = await tryCatch(getUser());
+    if (userError) {
+      console.log("User error:", userError);
+      return NextResponse.json(
+        { error: "Failed to get user" },
+        { status: 500 }
+      );
+    }
+    const userId = user.data.user?.id;
 
     if (!userId) {
       return NextResponse.json(
@@ -68,9 +76,9 @@ export async function POST(req: NextRequest) {
 
     if (!conversationId) {
       // Create a new conversation if no conversationId is provided
-      const { data, error } = await createConversation(userId);
-      conversationId = data?.id;
-      if (!conversationId || error) {
+      const [response, err] = await tryCatch(createConversation(userId));
+      conversationId = response?.data.id;
+      if (err || response.error || !conversationId) {
         return NextResponse.json(
           { error: "Failed to create conversation" },
           { status: 500 }
@@ -78,17 +86,22 @@ export async function POST(req: NextRequest) {
       }
     } else {
       //check if the conversationId belongs to the user
-      const { data: conversation, error } =
-        await getConversationsByUserIdAndConversationId(userId, conversationId);
-      if (error || !conversation) {
+      const [response, err] = await tryCatch(
+        getConversationsByUserIdAndConversationId(userId, conversationId)
+      );
+      const conversation = response;
+      if (err || response.error || !conversation) {
         return NextResponse.json(
           { error: "Conversation not found" },
           { status: 404 }
         );
       }
       // Fetch chat history for this conversation
-      const { data } = await getChatHistoryByConversationId(conversationId, 10);
-      chatHistory = data || [];
+      const [res] = await tryCatch(
+        getChatHistoryByConversationId(conversationId, 10)
+      );
+
+      chatHistory = res?.data || [];
       console.log("Chat history:", chatHistory);
     }
 
@@ -158,17 +171,26 @@ export async function POST(req: NextRequest) {
     const chain = RunnableSequence.from([formatInput, prompt, llm]);
 
     // 4. Call it
-    const result = await chain.invoke({
-      history: chatHistory,
-      question: query,
-      fileContext,
-    });
+    const [result, error] = await tryCatch(
+      chain.invoke({
+        history: chatHistory,
+        question: query,
+        fileContext,
+      })
+    );
+
+    if (error) {
+      console.error("Error invoking chain:", error);
+      return NextResponse.json(
+        { error: "Failed to process request" },
+        { status: 500 }
+      );
+    }
 
     const assistantMessage = result.text;
 
     // Store user message in chat_history
     await createChat(conversationId, query, "user");
-
     // Store assistant message in chat_history
     await createChat(conversationId, assistantMessage, "assistant");
 
