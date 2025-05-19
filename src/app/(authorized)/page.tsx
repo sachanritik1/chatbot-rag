@@ -1,13 +1,5 @@
-import { Metadata } from "next";
-import ChatPage from "./Home";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "AI Chat App",
-  description: "Chat with LLMs",
-};
-
-const Page = async () => {
-  return <ChatPage />;
-};
-
-export default Page;
+export default function Page() {
+  redirect("/chat");
+}

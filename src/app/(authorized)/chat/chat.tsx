@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload } from "lucide-react";
 
-export default function ChatPage() {
+export default function ChatPage({ title }: { title?: string }) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -69,7 +69,9 @@ export default function ChatPage() {
   return (
     <div className="flex size-full max-h-[calc(100%-2.5rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white/80 shadow-2xl backdrop-blur-lg dark:border-gray-800 dark:bg-[#18181b]/80">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white/60 px-6 py-4 dark:border-gray-800 dark:bg-[#23272f]/60">
-        <span className="text-lg font-bold tracking-tight">AI Chat</span>
+        <span className="text-lg font-bold tracking-tight">
+          {title ?? "AI Chat"}
+        </span>
         <div className="flex items-center gap-2">
           <input
             type="file"

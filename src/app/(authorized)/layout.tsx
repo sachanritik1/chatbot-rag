@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Chat with LLMs",
 };
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

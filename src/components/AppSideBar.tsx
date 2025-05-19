@@ -1,6 +1,5 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { createClient } from "@/utils/supabase/server";
 import { getAllConversationsByUserId } from "@/services/conversations";
 import { tryCatch } from "@/utils/try-catch";
@@ -13,6 +12,7 @@ import {
 import { redirect } from "next/navigation";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Suspense } from "react";
+import ConversationCard from "./ConversationCard";
 
 const logout = async () => {
   "use server";
@@ -78,10 +78,6 @@ export async function Conversations({
   }
   const conversations = conversationsResponse.data || [];
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
   return (
     <SidebarContent className="flex-1 space-y-2 overflow-y-auto p-2">
       {conversations.length === 0 ? (
@@ -90,20 +86,7 @@ export async function Conversations({
         </div>
       ) : (
         conversations.map((conversation) => (
-          <Card
-            key={conversation.id}
-            className={`cursor-pointer p-3 transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 ${
-              "currentConversationId" === conversation.id
-                ? "border-blue-300 bg-blue-100 dark:border-blue-700 dark:bg-blue-900/30"
-                : "bg-white dark:bg-[#23272f]"
-            }`}
-            //   onClick={() => onConversationSelect(conversation.id)}
-          >
-            <div className="truncate font-medium">{conversation.title}</div>
-            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {formatDate(conversation.created_at)}
-            </div>
-          </Card>
+          <ConversationCard key={conversation.id} conversation={conversation} />
         ))
       )}
     </SidebarContent>

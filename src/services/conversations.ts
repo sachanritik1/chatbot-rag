@@ -19,7 +19,7 @@ export const createConversation = async (userId: string) => {
 
 export const getConversationsByUserIdAndConversationId = async (
   userId: string,
-  conversationId: string
+  conversationId: string,
 ) => {
   const supabase = await createClient();
   const response = await supabase
@@ -38,5 +38,15 @@ export const getAllConversationsByUserId = async (userId: string) => {
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
+  return response;
+};
+
+export const getConversationById = async (conversationId: string) => {
+  const supabase = await createClient();
+  const response = await supabase
+    .from("conversations")
+    .select("*")
+    .eq("id", conversationId)
+    .single();
   return response;
 };
