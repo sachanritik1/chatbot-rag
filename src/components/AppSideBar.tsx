@@ -46,7 +46,7 @@ export default async function AppSideBar() {
         <Conversations conversationsPromise={conversationsPromise} />
       </Suspense>
       <SidebarFooter>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col items-center justify-between gap-2">
           <p>{userResponse.data.user.email}</p>
           <form action={logout}>
             <Button variant="outline" type="submit">

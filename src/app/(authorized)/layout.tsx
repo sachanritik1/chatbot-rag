@@ -15,7 +15,7 @@ export default function AuthLayout({
   return (
     <SidebarProvider>
       <AppSideBar />
-      <main className="flex-8/12">
+      <main className="flex-1 space-y-2 p-4">
         <SidebarTrigger />
         {children}
       </main>

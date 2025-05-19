@@ -67,88 +67,86 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex justify-center items-center">
-      <div className="w-full max-w-2xl h-[80vh] flex flex-col rounded-2xl shadow-2xl bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-[#23272f]/60">
-          <span className="font-bold text-lg tracking-tight">AI Chat</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              ref={fileInputRef}
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="outline"
-              className="flex items-center gap-2 text-gray-600"
-            >
-              <Upload className="w-4 h-4" />
-              Upload PDF
-            </Button>
-          </div>
-        </header>
-        {uploadStatus && (
-          <div className="px-6 py-2 text-sm text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400">
-            {uploadStatus}
-          </div>
-        )}
-        <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-400 select-none pt-16">
-              Start asking questions to your AI...
-            </div>
-          ) : (
-            messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow-md whitespace-pre-line ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-md"
-                      : "bg-gray-100 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 rounded-bl-md"
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))
-          )}
-          <div ref={chatEndRef} />
-        </main>
-        <form
-          onSubmit={handleSubmit}
-          className="flex gap-2 px-4 py-4 border-t border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-[#23272f]/60"
-        >
+    <div className="flex size-full max-h-[calc(100%-2.5rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white/80 shadow-2xl backdrop-blur-lg dark:border-gray-800 dark:bg-[#18181b]/80">
+      <header className="flex items-center justify-between border-b border-gray-200 bg-white/60 px-6 py-4 dark:border-gray-800 dark:bg-[#23272f]/60">
+        <span className="text-lg font-bold tracking-tight">AI Chat</span>
+        <div className="flex items-center gap-2">
           <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            className="flex-1 rounded-full px-4 py-2 bg-gray-100 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Ask your question here..."
-            disabled={loading}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            ref={fileInputRef}
           />
           <Button
-            type="submit"
-            disabled={loading || !question.trim()}
-            className="rounded-full px-6"
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="flex items-center gap-2 text-gray-600"
           >
-            {loading ? (
-              "..."
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" />
-                Send
-              </>
-            )}
+            <Upload className="h-4 w-4" />
+            Upload PDF
           </Button>
-        </form>
-        {error && <div className="px-6 pb-2 text-red-600 text-sm">{error}</div>}
-      </div>
+        </div>
+      </header>
+      {uploadStatus && (
+        <div className="bg-blue-50 px-6 py-2 text-sm text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+          {uploadStatus}
+        </div>
+      )}
+      <main className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
+        {messages.length === 0 ? (
+          <div className="pt-16 text-center text-gray-400 select-none">
+            Start asking questions to your AI...
+          </div>
+        ) : (
+          messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm whitespace-pre-line shadow-md ${
+                  msg.role === "user"
+                    ? "rounded-br-md bg-blue-600 text-white"
+                    : "rounded-bl-md bg-gray-100 text-gray-900 dark:bg-[#23272f] dark:text-gray-100"
+                }`}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={chatEndRef} />
+      </main>
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-2 border-t border-gray-200 bg-white/60 px-4 py-4 dark:border-gray-800 dark:bg-[#23272f]/60"
+      >
+        <input
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          className="flex-1 rounded-full border border-gray-300 bg-gray-100 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none dark:border-gray-700 dark:bg-[#23272f] dark:text-gray-100"
+          placeholder="Ask your question here..."
+          disabled={loading}
+        />
+        <Button
+          type="submit"
+          disabled={loading || !question.trim()}
+          className="rounded-full px-6"
+        >
+          {loading ? (
+            "..."
+          ) : (
+            <>
+              <Send className="mr-2 h-4 w-4" />
+              Send
+            </>
+          )}
+        </Button>
+      </form>
+      {error && <div className="px-6 pb-2 text-sm text-red-600">{error}</div>}
     </div>
   );
 }
