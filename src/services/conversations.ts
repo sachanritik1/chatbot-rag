@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+export const dynamic = "force-dynamic";
 
 export type Conversation = {
   id: string;
@@ -7,11 +8,11 @@ export type Conversation = {
   created_at: string;
 };
 
-export const createConversation = async (userId: string) => {
+export const createConversation = async (userId: string, title: string) => {
   const supabase = await createClient();
   const response = await supabase
     .from("conversations")
-    .insert([{ user_id: userId, title: "New Conversation" }])
+    .insert([{ user_id: userId, title }])
     .select()
     .single();
   return response;

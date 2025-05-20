@@ -18,6 +18,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@/utils/supabase/server";
 import { tryCatch } from "@/utils/try-catch";
+import { revalidatePath } from "next/cache";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
       console.log("User error:", userError);
       return NextResponse.json(
         { error: "Failed to get user" },
-        { status: 500 }
+        { status: 500 },
       );
     }
     const userId = user.data.user?.id;
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "No user_id provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         { error: parseResult.error.message || "Invalid input" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -74,31 +75,36 @@ export async function POST(req: NextRequest) {
       queryName: "match_documents", // optional RPC name
     });
 
+    const llm = new ChatOpenAI({ temperature: 0.2 });
+
     if (!conversationId) {
-      // Create a new conversation if no conversationId is provided
-      const [response, err] = await tryCatch(createConversation(userId));
+      const conversationTitlePrompt = `
+        Generate a title for a new conversation based on the following question: "${query}"
+      `;
+      const { text } = await llm.invoke(conversationTitlePrompt);
+      const [response, err] = await tryCatch(createConversation(userId, text));
       conversationId = response?.data.id;
       if (err || response.error || !conversationId) {
         return NextResponse.json(
           { error: "Failed to create conversation" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else {
       //check if the conversationId belongs to the user
       const [response, err] = await tryCatch(
-        getConversationsByUserIdAndConversationId(userId, conversationId)
+        getConversationsByUserIdAndConversationId(userId, conversationId),
       );
       const conversation = response;
       if (err || response.error || !conversation) {
         return NextResponse.json(
           { error: "Conversation not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
       // Fetch chat history for this conversation
       const [res] = await tryCatch(
-        getChatHistoryByConversationId(conversationId, 10)
+        getChatHistoryByConversationId(conversationId, 10),
       );
 
       chatHistory = res?.data || [];
@@ -128,7 +134,7 @@ export async function POST(req: NextRequest) {
     }
 
     const docs = await vectorStore.similaritySearch(query, 4, (rpc) =>
-      rpc.filter("metadata->>conversation_id", "eq", conversationId)
+      rpc.filter("metadata->>conversation_id", "eq", conversationId),
     );
 
     console.log("Docs found:", docs);
@@ -144,7 +150,6 @@ export async function POST(req: NextRequest) {
     };
 
     // 1. Load LLM
-    const llm = new ChatOpenAI({ temperature: 0.2 });
 
     type ChatInput = {
       history: ChatHistory[];
@@ -164,7 +169,7 @@ export async function POST(req: NextRequest) {
       Chat history: {chat_history}
       User: {question}
       PDF Context: {fileContext}
-      AI:`
+      AI:`,
     );
 
     // 3. Create chain
@@ -176,14 +181,14 @@ export async function POST(req: NextRequest) {
         history: chatHistory,
         question: query,
         fileContext,
-      })
+      }),
     );
 
     if (error) {
       console.error("Error invoking chain:", error);
       return NextResponse.json(
         { error: "Failed to process request" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -194,16 +199,17 @@ export async function POST(req: NextRequest) {
     // Store assistant message in chat_history
     await createChat(conversationId, assistantMessage, "assistant");
 
+    revalidatePath("/chat");
+
     return NextResponse.json({
-      data: assistantMessage,
+      data: { assistantMessage, conversationId },
       status: "success",
-      conversationId,
     });
   } catch (error) {
     console.log("Error in chat API:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
