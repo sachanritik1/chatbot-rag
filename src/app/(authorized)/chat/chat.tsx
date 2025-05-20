@@ -159,7 +159,7 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            className="flex-1 rounded-full border border-gray-300 bg-gray-100 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none dark:border-gray-700 dark:bg-[#23272f] dark:text-gray-100"
+            className="w-14 flex-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-2 text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none sm:w-fit sm:px-4 dark:border-gray-700 dark:bg-[#23272f] dark:text-gray-100"
             placeholder="Ask your question here..."
             disabled={loading}
           />
@@ -172,8 +172,8 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
               "..."
             ) : (
               <>
-                <Send className="mr-2 h-4 w-4" />
-                Send
+                <Send className="mr-1 h-4 w-4" />
+                <span className="hidden sm:inline">Send</span>
               </>
             )}
           </Button>
