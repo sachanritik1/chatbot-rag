@@ -7,12 +7,14 @@ const NewConversationButton = () => {
   const router = useRouter();
   return (
     <Button
-      variant="default"
+      variant="outline"
+      size="sm"
       title="New Conversation"
+      className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-1"
       onClick={() => router.push("/chat")}
     >
-      New
-      <Plus className="h-5 w-5" />
+      <Plus className="h-4 w-4" />
+      <span>New</span>
     </Button>
   );
 };

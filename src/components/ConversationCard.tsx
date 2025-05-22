@@ -20,17 +20,24 @@ const ConversationCard = ({
   return (
     <Card
       key={conversation.id}
-      className={`cursor-pointer gap-1 p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 ${
+      className={`group border-border/50 hover:bg-accent relative cursor-pointer overflow-hidden p-3 transition-all ${
         currentConversationId === conversation.id
-          ? "border-blue-300 bg-blue-100 dark:border-blue-700 dark:bg-blue-900/30"
-          : "bg-white dark:bg-[#23272f]"
+          ? "border-primary/30 bg-primary/5 ring-primary/10 shadow-sm ring-1"
+          : "hover:shadow-sm"
       }`}
       onClick={() => router.push(`/chat/${conversation.id}`)}
     >
-      <div className="truncate font-medium">{conversation.title}</div>
-      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        {formatDate(conversation.created_at)}
+      <div className="flex flex-col gap-1">
+        <div className="line-clamp-2 text-sm leading-tight font-medium">
+          {conversation.title}
+        </div>
+        {/* <div className="text-muted-foreground flex items-center text-xs">
+          <span>{formatDate(conversation.created_at)}</span>
+        </div> */}
       </div>
+      <div
+        className={`absolute inset-y-0 right-0 w-1 ${currentConversationId === conversation.id ? "bg-primary/40" : "group-hover:bg-primary/20 bg-transparent"}`}
+      />
     </Card>
   );
 };
