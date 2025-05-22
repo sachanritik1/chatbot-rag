@@ -3,10 +3,10 @@
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "./ui/card";
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
-};
+// const formatDate = (dateString: string) => {
+//   const date = new Date(dateString);
+//   return date.toLocaleDateString();
+// };
 
 const ConversationCard = ({
   conversation,
