@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload } from "lucide-react";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { revalidateConversations } from "@/actions/conversations";
 
 type ChatPageProps = {
   title?: string;
@@ -31,14 +32,6 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const params = useParams();
   const conversationId = params.conversationId as string;
-
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (pathname.match(/\/chat\/[a-zA-Z0-9]+/)) {
-      router.refresh();
-    }
-  }, [pathname, router]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -77,6 +70,7 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
       const data = await res.json();
       setUploadStatus("");
       if (!conversationId) {
+        await revalidateConversations();
         router.push(`/chat/${data.data.conversationId}`);
         return;
       }

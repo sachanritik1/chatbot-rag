@@ -18,7 +18,6 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@/utils/supabase/server";
 import { tryCatch } from "@/utils/try-catch";
-import { revalidatePath } from "next/cache";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
@@ -91,7 +90,7 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      //check if the conversationId belongs to the user
+      // check if the conversationId belongs to the user
       const [response, err] = await tryCatch(
         getConversationsByUserIdAndConversationId(userId, conversationId),
       );
@@ -198,8 +197,6 @@ export async function POST(req: NextRequest) {
     await createChat(conversationId, query, "user");
     // Store assistant message in chat_history
     await createChat(conversationId, assistantMessage, "assistant");
-
-    revalidatePath("/chat");
 
     return NextResponse.json({
       data: { assistantMessage, conversationId },
