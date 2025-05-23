@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Send, Upload } from "lucide-react";
+import { Send, Upload, X } from "lucide-react";
 
 interface ChatInputFormProps {
   onSubmit: (message: string, file?: File | null) => Promise<void>;
@@ -13,6 +13,7 @@ interface ChatInputFormProps {
 export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,7 +33,10 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
 
     try {
       await onSubmit(currentMessage, fileInputRef.current?.files?.[0]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+        setSelectedFile(null);
+      }
     } catch (err) {
       const errorMessage =
         (err as { message?: string }).message || "Request failed";
@@ -40,24 +44,57 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setSelectedFile(file ? file.name : null);
+  };
+
+  const clearSelectedFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      setSelectedFile(null);
+    }
+  };
+
   return (
     <>
-      <div className="flex w-full items-center gap-2">
+      <div className="flex w-full items-center gap-1 sm:gap-2">
         <input
           type="file"
           accept=".pdf"
           className="hidden"
           ref={fileInputRef}
+          onChange={handleFileChange}
         />
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          variant="outline"
-          className="flex items-center gap-2 text-gray-600"
-          type="button"
-        >
-          <Upload className="h-4 w-4" />
-          <span className="hidden sm:inline">Upload PDF</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="flex items-center gap-2 text-gray-600"
+            type="button"
+          >
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Upload PDF</span>
+          </Button>
+          {selectedFile && (
+            <div className="flex items-center gap-[2px] rounded-full bg-green-50 px-1 py-1 sm:gap-1 sm:px-2 dark:bg-green-900/20">
+              <span
+                className="max-w-[150px] overflow-hidden text-sm text-ellipsis text-green-600 dark:text-green-400"
+                title={selectedFile}
+              >
+                {selectedFile}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex h-5 w-5 items-center justify-center p-0"
+                onClick={clearSelectedFile}
+              >
+                <X className="h-3 w-3 text-green-600 dark:text-green-400" />
+              </Button>
+            </div>
+          )}
+        </div>
 
         <form
           onSubmit={handleSubmit}
