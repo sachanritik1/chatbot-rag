@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { revalidateConversations } from "@/actions/conversations";
+import { useParams } from "next/navigation";
+import { createNewConversation } from "@/actions/conversations";
 import { Message } from "@/components/MessageList";
 
 export function useChatHandler(initialMessages: Message[] = []) {
-  const router = useRouter();
   const params = useParams();
   const conversationId = params.conversationId as string;
 
@@ -25,6 +24,14 @@ export function useChatHandler(initialMessages: Message[] = []) {
     ]);
 
     try {
+      if (!conversationId) {
+        if (file) {
+          await createNewConversation({ query: messageText, file });
+          return;
+        }
+        await createNewConversation({ query: messageText });
+        return;
+      }
       // Prepare the request
       const formData = new FormData();
       if (file) {
@@ -43,13 +50,6 @@ export function useChatHandler(initialMessages: Message[] = []) {
 
       const data = await res.json();
       setLoadingMessage("");
-
-      // Handle conversation creation for new chats
-      if (!conversationId) {
-        await revalidateConversations();
-        router.push(`/chat/${data.data.conversationId}`);
-        return;
-      }
 
       // Add bot response to messages
       const botMsg =

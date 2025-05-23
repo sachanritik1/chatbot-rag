@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  ChatHistory,
-  createChat,
-  getChatHistoryByConversationId,
-} from "@/services/chats";
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { RunnableMap, RunnableSequence } from "@langchain/core/runnables";
-import {
-  createConversation,
-  getConversationsByUserIdAndConversationId,
-} from "@/services/conversations";
-import { getUser } from "@/services/users";
-import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { createClient } from "@/utils/supabase/server";
+
 import { tryCatch } from "@/utils/try-catch";
+import { chat } from "./chat";
+import { getUser } from "@/services/users";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
-  conversationId: z.string().optional(),
+  conversationId: z.string(),
   file: z.instanceof(File).optional(),
 });
 
@@ -64,148 +50,24 @@ export async function POST(req: NextRequest) {
 
     console.log("Parsed data:", parseResult.data);
 
-    const { query } = parseResult.data;
-    let conversationId = parseResult.data.conversationId;
-    let chatHistory = [] as ChatHistory[];
-    const file = parseResult.data.file;
-    const vectorStore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
-      client: await createClient(),
-      tableName: "documents", // or your vector table
-      queryName: "match_documents", // optional RPC name
-    });
+    const { query, conversationId, file } = parseResult.data;
 
-    const llm = new ChatOpenAI({ temperature: 0.2 });
-
-    if (!conversationId) {
-      const conversationTitlePrompt = `
-        Generate a title for a new conversation based on the following question: "${query}"
-      `;
-      const { text } = await llm.invoke(conversationTitlePrompt);
-      const [response, err] = await tryCatch(createConversation(userId, text));
-      conversationId = response?.data.id;
-      if (err || response.error || !conversationId) {
-        return NextResponse.json(
-          { error: "Failed to create conversation" },
-          { status: 500 },
-        );
-      }
-    } else {
-      // check if the conversationId belongs to the user
-      const [response, err] = await tryCatch(
-        getConversationsByUserIdAndConversationId(userId, conversationId),
-      );
-      const conversation = response;
-      if (err || response.error || !conversation) {
-        return NextResponse.json(
-          { error: "Conversation not found" },
-          { status: 404 },
-        );
-      }
-      // Fetch chat history for this conversation
-      const [res] = await tryCatch(
-        getChatHistoryByConversationId(conversationId, 10),
-      );
-
-      chatHistory = res?.data || [];
-      console.log("Chat history:", chatHistory);
-    }
-
-    console.log("Conversation ID:", conversationId);
-
-    if (file) {
-      const loader = new WebPDFLoader(file);
-      const pages = await loader.load();
-      const enrichedPages = pages.map((doc) => ({
-        ...doc,
-        metadata: {
-          ...doc.metadata,
-          conversation_id: conversationId,
-        },
-      }));
-
-      // Now split using LangChain splitter
-      const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
-        chunkOverlap: 200,
-      });
-      const splitDocs = await splitter.splitDocuments(enrichedPages);
-      await vectorStore.addDocuments(splitDocs);
-    }
-
-    const docs = await vectorStore.similaritySearch(query, 4, (rpc) =>
-      rpc.filter("metadata->>conversation_id", "eq", conversationId),
+    const [assistantMessage, err] = await tryCatch(
+      chat(userId, conversationId, query, file),
     );
 
-    console.log("Docs found:", docs);
-
-    const fileContext =
-      docs.map((doc) => doc.pageContent).join("\n---\n") || "";
-
-    const formatMessages = (messages: ChatHistory[]) => {
-      return messages.map((message) => ({
-        role: message.sender,
-        content: message.message,
-      }));
-    };
-
-    // 1. Load LLM
-
-    type ChatInput = {
-      history: ChatHistory[];
-      question: string;
-      fileContext: string;
-    };
-
-    // 2. Format input
-    const formatInput = RunnableMap.from({
-      chat_history: (input: ChatInput) => formatMessages(input.history),
-      question: (input: ChatInput) => input.question,
-      fileContext: (input: ChatInput) => input.fileContext,
-    });
-
-    const prompt = PromptTemplate.fromTemplate(
-      `You are a helpful assistant. Use the following chat history and PDF context (if available) to answer the user’s last question.
-      Chat history: {chat_history}
-      User: {question}
-      PDF Context: {fileContext}
-      AI:`,
-    );
-
-    // 3. Create chain
-    const chain = RunnableSequence.from([formatInput, prompt, llm]);
-
-    // 4. Call it
-    const [result, error] = await tryCatch(
-      chain.invoke({
-        history: chatHistory,
-        question: query,
-        fileContext,
-      }),
-    );
-
-    if (error) {
-      console.error("Error invoking chain:", error);
-      return NextResponse.json(
-        { error: "Failed to process request" },
-        { status: 500 },
-      );
+    if (err) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
     }
-
-    const assistantMessage = result.text;
-
-    // Store user message in chat_history
-    await createChat(conversationId, query, "user");
-    // Store assistant message in chat_history
-    await createChat(conversationId, assistantMessage, "assistant");
 
     return NextResponse.json({
-      data: { assistantMessage, conversationId },
-      status: "success",
+      data: { assistantMessage },
+      success: true,
     });
   } catch (error) {
     console.log("Error in chat API:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Something went wrong", success: false },
       { status: 500 },
     );
   }
