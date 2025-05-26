@@ -27,11 +27,9 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
 
   return (
     <Card className="size-full max-h-[calc(100%-2.5rem)]">
-      <CardHeader className="flex items-center justify-between border-b border-gray-200 bg-white/60 dark:border-gray-800 dark:bg-[#23272f]/60">
-        <CardTitle className="flex w-full items-center justify-between">
-          <h1 className="text-lg font-bold tracking-tight">
-            {title ?? "AI Chat"}
-          </h1>
+      <CardHeader>
+        <CardTitle className="text-xl font-bold">
+          {title ?? "AI Chat"}
         </CardTitle>
       </CardHeader>
 
@@ -43,7 +41,7 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
         />
       </CardContent>
 
-      <CardFooter className="flex w-full border-t border-gray-200 bg-white/60 dark:border-gray-800 dark:bg-[#23272f]/60">
+      <CardFooter>
         <ChatInputForm onSubmit={handleSendMessage} isLoading={isLoading} />
       </CardFooter>
     </Card>
