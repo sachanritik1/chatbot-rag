@@ -13,6 +13,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Suspense } from "react";
 import ConversationCard from "./ConversationCard";
 import NewConversationButton from "./NewConversationButton";
+import ThemeToggleWrapper from "./ThemeToggleWrapper";
 import { MessageSquare, LogOut } from "lucide-react";
 
 const logout = async () => {
@@ -64,6 +65,7 @@ export default async function AppSideBar() {
             <p className="text-muted-foreground truncate text-sm font-medium">
               {userResponse.data.user.email}
             </p>
+            <ThemeToggleWrapper />
           </div>
           <form action={logout}>
             <Button

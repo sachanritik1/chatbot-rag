@@ -1,6 +1,7 @@
 import { AuthForm } from "@/components/AuthForm";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import LoginThemeToggle from "@/components/LoginThemeToggle";
 
 export default async function Login() {
   const supabase = await createClient();
@@ -12,6 +13,7 @@ export default async function Login() {
   }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] transition-colors duration-300 dark:from-[#18181b] dark:to-[#23272f]">
+      <LoginThemeToggle />
       <AuthForm />
     </div>
   );

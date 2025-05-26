@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AppSideBar from "@/components/AppSideBar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import ChatHeader from "@/components/ChatHeader";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
   title: "AI Chat App",
@@ -16,7 +17,7 @@ export default async function AuthLayout({
     <SidebarProvider>
       <AppSideBar />
       <main className="h-[100svh] w-screen flex-1 space-y-2 p-4 sm:h-screen">
-        <SidebarTrigger />
+        <ChatHeader />
         {children}
       </main>
     </SidebarProvider>
