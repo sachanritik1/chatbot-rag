@@ -51,3 +51,14 @@ export const getConversationById = async (conversationId: string) => {
     .single();
   return response;
 };
+
+export const deleteConversationById = async (conversationId: string) => {
+  const supabase = await createClient();
+  const response = await supabase
+    .from("conversations")
+    .delete()
+    .eq("id", conversationId)
+    .select()
+    .single();
+  return response;
+};

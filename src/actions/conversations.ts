@@ -1,7 +1,10 @@
 "use server";
 
 import { chat } from "@/app/api/chat/chat";
-import { createConversation } from "@/services/conversations";
+import {
+  createConversation,
+  deleteConversationById,
+} from "@/services/conversations";
 import { getUser } from "@/services/users";
 import { tryCatch } from "@/utils/try-catch";
 import { ChatOpenAI } from "@langchain/openai";
@@ -53,4 +56,32 @@ export async function createNewConversation(
 
   revalidatePath("/(authorized)/chat", "layout");
   redirect(`/chat/${conversationId}`);
+}
+
+const deleteConversationSchema = z.object({
+  conversationId: z.string().min(1, "Conversation ID is required"),
+});
+type deleteConversationSchemaType = z.infer<typeof deleteConversationSchema>;
+
+export async function deleteConversation(props: deleteConversationSchemaType) {
+  const parsedData = deleteConversationSchema.safeParse(props);
+  if (!parsedData.success) {
+    return parsedData.error.message;
+  }
+  const [user, userError] = await tryCatch(getUser());
+  const userId = user?.data.user?.id;
+  if (!userId || userError) {
+    redirect("/login");
+  }
+
+  const { conversationId } = parsedData.data;
+  const [response, error] = await tryCatch(
+    deleteConversationById(conversationId),
+  );
+
+  if (error || response.error || !response.data) {
+    return "Error deleting conversation";
+  }
+
+  revalidatePath("/(authorized)/chat", "layout");
 }
