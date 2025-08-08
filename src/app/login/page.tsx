@@ -9,7 +9,7 @@ export default async function Login() {
   console.log("User data:", data);
 
   if (data?.user && data.user.id) {
-    redirect("/");
+    redirect("/chat");
   }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] transition-colors duration-300 dark:from-[#18181b] dark:to-[#23272f]">
