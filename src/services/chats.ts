@@ -27,7 +27,14 @@ export const getChatHistoryByConversationId = async (
   if (response.data) {
     response.data = [...response.data].reverse();
   }
-  return response;
+  // Compute total pages (treat newest page as page 1)
+  const totalHead = await supabase
+    .from("chats")
+    .select("id", { count: "exact", head: true })
+    .eq("conversation_id", conversationId);
+  const totalCount = totalHead.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  return { ...response, page: 1, totalPages } as const;
 };
 
 export const getOlderChatHistoryByConversationId = async (
@@ -60,7 +67,26 @@ export const getOlderChatHistoryByConversationId = async (
   if (response.data) {
     response.data = [...response.data].reverse();
   }
-  return response;
+  // Compute total pages and next page index relative to cursor (newest page is page 1)
+  const totalHead = await supabase
+    .from("chats")
+    .select("id", { count: "exact", head: true })
+    .eq("conversation_id", conversationId);
+  const totalCount = totalHead.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+  const createdAt = cursor.data.created_at as string;
+  const rankHead = await supabase
+    .from("chats")
+    .select("id", { count: "exact", head: true })
+    .eq("conversation_id", conversationId)
+    .or(
+      `created_at.gt.${createdAt},and(created_at.eq.${createdAt},id.gte.${beforeMessageId})`,
+    );
+  const index = (rankHead.count ?? 1) - 1; // zero-based index of cursor in newest-first ordering
+  const nextPage = Math.min(totalPages, Math.floor((index + 1) / limit) + 1);
+
+  return { ...response, page: nextPage, totalPages } as const;
 };
 
 export const createChat = async (

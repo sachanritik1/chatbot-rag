@@ -13,13 +13,28 @@ import { useChatHandler } from "@/hooks/use-chat-handler";
 
 type ChatPageProps = {
   title?: string;
-  prevMessages?: { role: "user" | "bot"; content: string }[];
+  prevMessages?: {
+    id?: string;
+    role: "user" | "bot";
+    content: string;
+    createdAt?: string;
+  }[];
+  initialHasMore?: boolean;
 };
 
-export default function ChatPage({ title, prevMessages }: ChatPageProps) {
+export default function ChatPage({
+  title,
+  prevMessages,
+  initialHasMore,
+}: ChatPageProps) {
   // Convert previous messages to the right format with timestamps
   const initialMessages =
-    prevMessages?.map((msg) => ({ ...msg, timestamp: new Date() })) || [];
+    prevMessages?.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+    })) || [];
 
   // Use our custom hook for chat functionality
   const {
@@ -30,7 +45,7 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
     loadPreviousMessages,
     isLoadingMore,
     hasMore,
-  } = useChatHandler(initialMessages);
+  } = useChatHandler(initialMessages, initialHasMore);
 
   return (
     <Card className="size-full max-h-[calc(100%-2.5rem)]">

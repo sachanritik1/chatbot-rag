@@ -6,7 +6,10 @@ import { createNewConversation } from "@/actions/conversations";
 import { Message } from "@/components/MessageList";
 import { DEFAULT_MODEL_ID, ModelId } from "@/config/models";
 
-export function useChatHandler(initialMessages: Message[] = []) {
+export function useChatHandler(
+  initialMessages: Message[] = [],
+  initialHasMore: boolean = true,
+) {
   const params = useParams();
   const conversationId = params.conversationId as string;
 
@@ -14,7 +17,7 @@ export function useChatHandler(initialMessages: Message[] = []) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState<boolean>(initialHasMore);
 
   const handleSendMessage = async (
     messageText: string,
@@ -114,7 +117,15 @@ export function useChatHandler(initialMessages: Message[] = []) {
         message: string;
         created_at: string;
       }> = data?.data || [];
-      if (older.length === 0) {
+      const pagination = data?.pagination as
+        | { totalPages?: number; page?: number }
+        | undefined;
+      if (pagination && pagination.totalPages && pagination.page) {
+        // Hide if we've reached the boundary (page 1) or no further pages exist
+        const noMore =
+          pagination.page <= 1 || pagination.page >= pagination.totalPages;
+        setHasMore(!noMore);
+      } else if (older.length === 0) {
         setHasMore(false);
         return;
       }

@@ -52,7 +52,14 @@ const Page = async ({ params }: Props) => {
       content: chat.message,
       createdAt: chat.created_at,
     })) || [];
-  return <ChatPage title={conversation.title} prevMessages={messages} />;
+  const initialHasMore = (chatsResponse.totalPages ?? 1) > 1;
+  return (
+    <ChatPage
+      title={conversation.title}
+      prevMessages={messages}
+      initialHasMore={initialHasMore}
+    />
+  );
 };
 
 export default Page;
