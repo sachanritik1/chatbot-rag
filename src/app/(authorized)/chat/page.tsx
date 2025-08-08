@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import ChatPage from "./chat";
+import ChatHeader from "@/components/ChatHeader";
 
 export const metadata: Metadata = {
   title: "Create a new conversation",
@@ -7,7 +8,12 @@ export const metadata: Metadata = {
 };
 
 const Page = async () => {
-  return <ChatPage title="Create a new conversation" />;
+  return (
+    <>
+      <ChatHeader title="Create a new conversation" />
+      <ChatPage initialHasMore={false} />
+    </>
+  );
 };
 
 export default Page;

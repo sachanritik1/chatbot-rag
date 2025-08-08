@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import ChatPage from "../chat";
+import ChatHeader from "@/components/ChatHeader";
 import { tryCatch } from "@/utils/try-catch";
 import { getConversationById } from "@/services/conversations";
 import { getChatHistoryByConversationId } from "@/services/chats";
@@ -52,13 +53,14 @@ const Page = async ({ params }: Props) => {
       content: chat.message,
       createdAt: chat.created_at,
     })) || [];
-  const initialHasMore = (chatsResponse.totalPages ?? 1) > 1;
+  const initialHasMore =
+    (chatsResponse.totalPages ?? 1) > 1 &&
+    (chatsResponse.page ?? 1) < (chatsResponse.totalPages ?? 1);
   return (
-    <ChatPage
-      title={conversation.title}
-      prevMessages={messages}
-      initialHasMore={initialHasMore}
-    />
+    <>
+      <ChatHeader title={conversation.title} />
+      <ChatPage prevMessages={messages} initialHasMore={initialHasMore} />
+    </>
   );
 };
 
