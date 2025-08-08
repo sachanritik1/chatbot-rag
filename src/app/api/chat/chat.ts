@@ -121,7 +121,9 @@ export const chat = async (
     throw error;
   }
 
-  const assistantMessage = String((result as any).content ?? "");
+  const assistantMessage = String(
+    (result as unknown as { content: string }).content ?? "",
+  );
 
   // Store user message in chat_history
   await createChat(conversationId, query, "user");

@@ -7,7 +7,6 @@ import {
 } from "@/services/conversations";
 import { getUser } from "@/services/users";
 import { tryCatch } from "@/utils/try-catch";
-import { ChatOpenAI } from "@langchain/openai";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import { createChatLlm } from "@/lib/llm";
 import { revalidatePath } from "next/cache";

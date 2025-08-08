@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { getModelConfig, type ModelId } from "@/config/models";
+import { getModelConfig } from "@/config/models";
 
 export type LlmFactoryParams = {
   model?: string | null;
