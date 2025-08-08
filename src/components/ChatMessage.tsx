@@ -129,10 +129,13 @@ export function ChatMessage({
                 "text-xs text-gray-500 dark:text-gray-400",
                 isUser ? "mr-2 text-right" : "ml-2 text-left",
               )}
+              suppressHydrationWarning
             >
-              {timestamp.toLocaleTimeString([], {
+              {timestamp.toLocaleTimeString("en-US", {
                 hour: "2-digit",
                 minute: "2-digit",
+                hour12: false,
+                timeZone: "UTC",
               })}
             </div>
           )}
