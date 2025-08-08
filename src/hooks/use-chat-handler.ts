@@ -42,22 +42,44 @@ export function useChatHandler(initialMessages: Message[] = []) {
       }
       formData.append("query", messageText);
 
-      // Send the request
+      // Send the request and stream the response
       const res = await fetch("/api/chat", {
         method: "POST",
         body: formData,
       });
 
-      const data = await res.json();
-      setLoadingMessage("");
+      if (!res.ok || !res.body) {
+        const errorText = await res.text().catch(() => "No answer returned");
+        throw new Error(errorText || "Request failed");
+      }
 
-      // Add bot response to messages
-      const botMsg =
-        data?.data?.assistantMessage || data?.error || "No answer returned";
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      // Optimistically add an empty bot message that we append to
       setMessages((msgs) => [
         ...msgs,
-        { role: "bot", content: botMsg, timestamp: new Date() },
+        { role: "bot", content: "", timestamp: new Date() },
       ]);
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        setMessages((msgs) => {
+          const updated = [...msgs];
+          const last = updated[updated.length - 1];
+          if (last && last.role === "bot") {
+            updated[updated.length - 1] = {
+              ...last,
+              content: (last.content || "") + chunk,
+              timestamp: new Date(),
+            };
+          }
+          return updated;
+        });
+      }
+      setLoadingMessage("");
     } catch (err) {
       console.error("Error sending message:", err);
       throw err; // Let the component handle the error

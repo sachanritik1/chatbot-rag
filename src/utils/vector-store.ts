@@ -27,7 +27,7 @@ export const getExistingVectorStore = async () => {
 
 export const addDocumentsToStore = async (
   documents: Document[],
-  conversationId: string
+  conversationId: string,
 ) => {
   // Ensure every document has the conversationId in metadata
   const docsWithConversation = documents.map((doc) => ({
