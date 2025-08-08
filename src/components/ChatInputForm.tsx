@@ -5,13 +5,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload, X } from "lucide-react";
 import { Input } from "./ui/input";
-import { MODEL_OPTIONS, DEFAULT_MODEL_ID } from "@/config/models";
+import { MODEL_OPTIONS, DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
 
 interface ChatInputFormProps {
   onSubmit: (
     message: string,
     file?: File | null,
-    model?: string,
+    model?: ModelId,
   ) => Promise<void>;
   isLoading: boolean;
 }
@@ -21,7 +21,7 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID);
+  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL_ID);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,7 +103,7 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
             <select
               className="rounded-md border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-[#23272f]"
               value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
+              onChange={(e) => setSelectedModel(e.target.value as ModelId)}
               disabled={isLoading}
             >
               {MODEL_OPTIONS.map((m) => (

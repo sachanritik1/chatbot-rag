@@ -22,8 +22,15 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
     prevMessages?.map((msg) => ({ ...msg, timestamp: new Date() })) || [];
 
   // Use our custom hook for chat functionality
-  const { messages, isLoading, loadingMessage, handleSendMessage } =
-    useChatHandler(initialMessages);
+  const {
+    messages,
+    isLoading,
+    loadingMessage,
+    handleSendMessage,
+    loadPreviousMessages,
+    isLoadingMore,
+    hasMore,
+  } = useChatHandler(initialMessages);
 
   return (
     <Card className="size-full max-h-[calc(100%-2.5rem)]">
@@ -34,10 +41,23 @@ export default function ChatPage({ title, prevMessages }: ChatPageProps) {
       </CardHeader>
 
       <CardContent className="h-full max-h-[calc(100%-2.5rem)] space-y-5 overflow-y-auto px-4 py-6">
+        {hasMore && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className="text-sm text-blue-600 hover:underline disabled:opacity-60"
+              disabled={isLoadingMore}
+              onClick={loadPreviousMessages}
+            >
+              {isLoadingMore ? "Loading…" : "Load previous messages"}
+            </button>
+          </div>
+        )}
         <MessageList
           messages={messages}
           isLoading={isLoading}
           loadingMessage={loadingMessage}
+          shouldAutoScroll={!isLoadingMore}
         />
       </CardContent>
 

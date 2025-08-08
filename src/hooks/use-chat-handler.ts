@@ -13,6 +13,8 @@ export function useChatHandler(initialMessages: Message[] = []) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const handleSendMessage = async (
     messageText: string,
@@ -95,10 +97,46 @@ export function useChatHandler(initialMessages: Message[] = []) {
     }
   };
 
+  const loadPreviousMessages = async () => {
+    if (!conversationId || messages.length === 0) return;
+    setIsLoadingMore(true);
+    try {
+      const oldest = messages[0];
+      const res = await fetch(
+        `/api/messages?conversationId=${conversationId}&beforeId=${encodeURIComponent(
+          oldest.id || "",
+        )}&limit=20`,
+      );
+      const data = await res.json();
+      const older: Array<{
+        id: string;
+        sender: "user" | "assistant";
+        message: string;
+        created_at: string;
+      }> = data?.data || [];
+      if (older.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      const mapped: Message[] = older.map((c) => ({
+        id: c.id,
+        role: c.sender === "assistant" ? "bot" : "user",
+        content: c.message,
+        timestamp: new Date(c.created_at),
+      }));
+      setMessages((prev) => [...mapped, ...prev]);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   return {
     messages,
     isLoading,
     loadingMessage,
     handleSendMessage,
+    loadPreviousMessages,
+    isLoadingMore,
+    hasMore,
   };
 }

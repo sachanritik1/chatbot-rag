@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { tryCatch } from "@/utils/try-catch";
 import { getUser } from "@/services/users";
-import { getConversationsByUserIdAndConversationId } from "@/services/conversations";
+import { getConversationByUserIdAndConversationId } from "@/services/conversations";
 import { getChatHistoryByConversationId, createChat } from "@/services/chats";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Verify conversation belongs to user
     const [convRes, convErr] = await tryCatch(
-      getConversationsByUserIdAndConversationId(userId, conversationId),
+      getConversationByUserIdAndConversationId(userId, conversationId),
     );
     if (convErr || convRes.error || !convRes.data) {
       return NextResponse.json(

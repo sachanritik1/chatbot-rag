@@ -5,6 +5,7 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { Bot } from "lucide-react";
 
 export type Message = {
+  id?: string;
   role: "user" | "bot";
   content: string;
   timestamp: Date;
@@ -14,18 +15,56 @@ interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
   loadingMessage?: string;
+  shouldAutoScroll?: boolean;
 }
 
 export function MessageList({
   messages,
   isLoading,
   loadingMessage,
+  shouldAutoScroll = true,
 }: MessageListProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevLenRef = useRef<number>(0);
+  const prevFirstIdRef = useRef<string | undefined>(undefined);
+  const prevLastIdRef = useRef<string | undefined>(undefined);
+  const prevLastContentLenRef = useRef<number>(0);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+    const firstId = messages[0]?.id;
+    const last = messages[messages.length - 1];
+    const lastId = last?.id;
+    const lastContentLen = (last?.content?.length ?? 0) as number;
+
+    const hasAppended =
+      lastId !== undefined &&
+      prevLastIdRef.current !== undefined &&
+      lastId !== prevLastIdRef.current;
+
+    const hasPrepended =
+      firstId !== undefined &&
+      prevFirstIdRef.current !== undefined &&
+      firstId !== prevFirstIdRef.current &&
+      messages.length > prevLenRef.current;
+
+    const streamingUpdateToLast =
+      messages.length === prevLenRef.current &&
+      lastContentLen > prevLastContentLenRef.current;
+
+    if (
+      shouldAutoScroll &&
+      (hasAppended || streamingUpdateToLast) &&
+      !hasPrepended
+    ) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // update refs after decision
+    prevLenRef.current = messages.length;
+    prevFirstIdRef.current = firstId;
+    prevLastIdRef.current = lastId;
+    prevLastContentLenRef.current = lastContentLen;
+  }, [messages, shouldAutoScroll]);
 
   if (messages.length === 0 && !isLoading) {
     return (

@@ -18,7 +18,7 @@ export const createConversation = async (userId: string, title: string) => {
   return response;
 };
 
-export const getConversationsByUserIdAndConversationId = async (
+export const getConversationByUserIdAndConversationId = async (
   userId: string,
   conversationId: string,
 ) => {

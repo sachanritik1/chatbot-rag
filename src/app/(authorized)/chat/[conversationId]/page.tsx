@@ -47,6 +47,7 @@ const Page = async ({ params }: Props) => {
   }
   const messages =
     chatsResponse.data.map((chat) => ({
+      id: chat.id,
       role: chat.sender === "assistant" ? ("bot" as const) : ("user" as const),
       content: chat.message,
       createdAt: chat.created_at,

@@ -6,7 +6,7 @@ import {
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableMap, RunnableSequence } from "@langchain/core/runnables";
-import { getConversationsByUserIdAndConversationId } from "@/services/conversations";
+import { getConversationByUserIdAndConversationId } from "@/services/conversations";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
@@ -30,7 +30,7 @@ export const chat = async (
 
   // check if the conversationId belongs to the user
   const [response, err] = await tryCatch(
-    getConversationsByUserIdAndConversationId(userId, conversationId),
+    getConversationByUserIdAndConversationId(userId, conversationId),
   );
   const conversation = response;
   if (err || response.error || !conversation) {
