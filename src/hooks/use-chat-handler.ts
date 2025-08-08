@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { createNewConversation } from "@/actions/conversations";
 import { Message } from "@/components/MessageList";
+import { DEFAULT_MODEL_ID, ModelId } from "@/config/models";
 
 export function useChatHandler(initialMessages: Message[] = []) {
   const params = useParams();
@@ -13,7 +14,11 @@ export function useChatHandler(initialMessages: Message[] = []) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
 
-  const handleSendMessage = async (messageText: string, file?: File | null) => {
+  const handleSendMessage = async (
+    messageText: string,
+    file?: File | null,
+    model: ModelId = DEFAULT_MODEL_ID,
+  ) => {
     setIsLoading(true);
     setLoadingMessage("Processing your question...");
 
@@ -26,10 +31,10 @@ export function useChatHandler(initialMessages: Message[] = []) {
     try {
       if (!conversationId) {
         if (file) {
-          await createNewConversation({ query: messageText, file });
+          await createNewConversation({ query: messageText, file, model });
           return;
         }
-        await createNewConversation({ query: messageText });
+        await createNewConversation({ query: messageText, model });
         return;
       }
       // Prepare the request
@@ -41,6 +46,7 @@ export function useChatHandler(initialMessages: Message[] = []) {
         formData.append("conversationId", conversationId);
       }
       formData.append("query", messageText);
+      formData.append("model", model);
 
       // Send the request and stream the response
       const res = await fetch("/api/chat", {

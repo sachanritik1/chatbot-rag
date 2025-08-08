@@ -4,6 +4,8 @@ import { tryCatch } from "@/utils/try-catch";
 import { getConversationById } from "@/services/conversations";
 import { getChatHistoryByConversationId } from "@/services/chats";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{
     conversationId: string;
@@ -45,7 +47,7 @@ const Page = async ({ params }: Props) => {
   }
   const messages =
     chatsResponse.data.map((chat) => ({
-      role: chat.sender,
+      role: chat.sender === "assistant" ? ("bot" as const) : ("user" as const),
       content: chat.message,
       createdAt: chat.created_at,
     })) || [];

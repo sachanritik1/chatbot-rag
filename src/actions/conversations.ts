@@ -8,6 +8,8 @@ import {
 import { getUser } from "@/services/users";
 import { tryCatch } from "@/utils/try-catch";
 import { ChatOpenAI } from "@langchain/openai";
+import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
+import { createChatLlm } from "@/lib/llm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -15,6 +17,7 @@ import { z } from "zod";
 const createConversationSchema = z.object({
   query: z.string().min(1, "Query is required"),
   file: z.instanceof(File).optional(),
+  model: z.enum(ALLOWED_MODEL_IDS).optional().default(DEFAULT_MODEL_ID),
 });
 
 type createConversationSchemaType = z.infer<typeof createConversationSchema>;
@@ -27,7 +30,7 @@ export async function createNewConversation(
     console.log("Validation error:", parsedData.error);
     return parsedData.error.message;
   }
-  const { query, file } = parsedData.data;
+  const { query, file, model } = parsedData.data;
 
   const [user, userError] = await tryCatch(getUser());
   const userId = user?.data.user?.id;
@@ -35,7 +38,7 @@ export async function createNewConversation(
     redirect("/login");
   }
 
-  const llm = new ChatOpenAI({ temperature: 0.2 });
+  const llm = createChatLlm({ model });
   const conversationTitlePrompt = `
           Generate a title for a new conversation based on the following question: "${query}"
         `;
@@ -47,7 +50,7 @@ export async function createNewConversation(
   }
 
   const [assistantMessage, error] = await tryCatch(
-    chat(userId, conversationId, query, file),
+    chat(userId, conversationId, query, file, model),
   );
 
   if (error || !assistantMessage) {

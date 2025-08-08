@@ -8,14 +8,17 @@ import { getChatHistoryByConversationId, createChat } from "@/services/chats";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { createClient } from "@/utils/supabase/server";
+import { createChatLlm } from "@/lib/llm";
+import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
   conversationId: z.string().min(1, "conversationId is required"),
   file: z.instanceof(File).optional(),
+  model: z.enum(ALLOWED_MODEL_IDS).optional().default(DEFAULT_MODEL_ID),
 });
 
 export async function POST(req: NextRequest) {
@@ -55,7 +58,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { query, conversationId, file } = parseResult.data;
+    const { query, conversationId, file, model } = parseResult.data;
 
     // Verify conversation belongs to user
     const [convRes, convErr] = await tryCatch(
@@ -69,8 +72,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare vector store and retrieve context
+    const supabase = await createClient();
+
     const vectorStore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
-      client: await createClient(),
+      client: supabase,
       tableName: "documents",
       queryName: "match_documents",
     });
@@ -106,12 +111,12 @@ export async function POST(req: NextRequest) {
 
     // Fetch recent chat history
     const [historyRes] = await tryCatch(
-      getChatHistoryByConversationId(conversationId, 10),
+      getChatHistoryByConversationId(conversationId, 10, supabase),
     );
     const chatHistory = historyRes?.data || [];
 
     // Insert the user message immediately
-    await createChat(conversationId, query, "user");
+    await createChat(conversationId, query, "user", supabase);
 
     // Prepare prompt
     const formatMessages = (
@@ -131,7 +136,7 @@ export async function POST(req: NextRequest) {
       fileContext,
     });
 
-    const llm = new ChatOpenAI({ temperature: 0.2 });
+    const llm = createChatLlm({ model });
 
     const encoder = new TextEncoder();
     let assistantBuffer = "";
@@ -172,7 +177,17 @@ export async function POST(req: NextRequest) {
             }
             // Persist assistant message
             if (assistantBuffer.trim().length > 0) {
-              await createChat(conversationId, assistantBuffer, "assistant");
+              console.log(
+                "Creating assistant chat",
+                conversationId,
+                assistantBuffer,
+              );
+              await createChat(
+                conversationId,
+                assistantBuffer,
+                "assistant",
+                supabase,
+              );
             }
             controller.close();
           } catch (err) {

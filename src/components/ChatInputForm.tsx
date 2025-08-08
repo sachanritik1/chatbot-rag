@@ -5,9 +5,14 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload, X } from "lucide-react";
 import { Input } from "./ui/input";
+import { MODEL_OPTIONS, DEFAULT_MODEL_ID } from "@/config/models";
 
 interface ChatInputFormProps {
-  onSubmit: (message: string, file?: File | null) => Promise<void>;
+  onSubmit: (
+    message: string,
+    file?: File | null,
+    model?: string,
+  ) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -16,6 +21,7 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +39,11 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
     setMessage("");
 
     try {
-      await onSubmit(currentMessage, fileInputRef.current?.files?.[0]);
+      await onSubmit(
+        currentMessage,
+        fileInputRef.current?.files?.[0],
+        selectedModel,
+      );
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
         setSelectedFile(null);
@@ -85,7 +95,24 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
           </Button>
         </div>
         {/* Hidden file input for PDF uploads */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600 dark:text-gray-300">
+              Model
+            </label>
+            <select
+              className="rounded-md border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-[#23272f]"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              disabled={isLoading}
+            >
+              {MODEL_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <input
             type="file"
             accept=".pdf"

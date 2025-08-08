@@ -18,6 +18,7 @@ export const chat = async (
   conversationId: string,
   query: string,
   file: File | undefined,
+  model: string = "gpt-5-mini",
 ) => {
   const vectorStore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
     client: await createClient(),
@@ -25,7 +26,7 @@ export const chat = async (
     queryName: "match_documents", // optional RPC name
   });
 
-  const llm = new ChatOpenAI({ temperature: 0.2 });
+  const llm = new ChatOpenAI({ model, temperature: 0.2 });
 
   // check if the conversationId belongs to the user
   const [response, err] = await tryCatch(
@@ -120,7 +121,7 @@ export const chat = async (
     throw error;
   }
 
-  const assistantMessage = result.text;
+  const assistantMessage = String((result as any).content ?? "");
 
   // Store user message in chat_history
   await createChat(conversationId, query, "user");
