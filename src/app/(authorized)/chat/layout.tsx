@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import AppSideBar from "@/components/AppSideBar";
-import ChatHeader from "@/components/ChatHeader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
