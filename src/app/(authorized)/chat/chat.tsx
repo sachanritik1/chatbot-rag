@@ -53,8 +53,8 @@ export default function ChatPage({
     (lastWithModel?.model as ModelId | undefined) || undefined;
 
   return (
-    <Card className="size-full max-h-[calc(100%-2.5rem)]">
-      <CardContent className="h-full max-h-[calc(100%-2.5rem)] space-y-5 overflow-y-auto px-4 py-6">
+    <Card className="size-full max-h-[calc(100%-2.5rem)] pt-0">
+      <CardContent className="h-full max-h-[calc(100%-2.5rem)] space-y-5 overflow-y-auto border-b-2 px-4 py-6">
         {hasMore && (
           <div className="flex justify-center">
             <button
