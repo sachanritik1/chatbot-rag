@@ -14,12 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, signup } from "@/actions/auth";
 
-export function AuthForm() {
+export function AuthForm({
+  defaultMode = "login",
+}: {
+  defaultMode?: "login" | "signup";
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(defaultMode);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,8 +86,8 @@ export function AuthForm() {
             {isLoading
               ? "Loading..."
               : mode === "login"
-              ? "Sign In"
-              : "Create Account"}
+                ? "Sign In"
+                : "Create Account"}
           </Button>
           <Button
             type="button"
