@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Send, Upload, X } from "lucide-react";
 import { Input } from "./ui/input";
-import { MODEL_OPTIONS, DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
+import {
+  MODEL_OPTIONS,
+  DEFAULT_MODEL_ID,
+  type ModelId,
+  ALLOWED_MODEL_IDS,
+} from "@/config/models";
 import {
   Select,
   SelectContent,
@@ -21,14 +27,54 @@ interface ChatInputFormProps {
     model?: ModelId,
   ) => Promise<void>;
   isLoading: boolean;
+  initialModel?: ModelId;
 }
 
-export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
+export function ChatInputForm({
+  onSubmit,
+  isLoading,
+  initialModel,
+}: ChatInputFormProps) {
+  const params = useParams();
+  const conversationId =
+    (params?.conversationId as string | undefined) || undefined;
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL_ID);
+  const [selectedModel, setSelectedModel] = useState<ModelId>(
+    initialModel || DEFAULT_MODEL_ID,
+  );
+
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const GLOBAL_KEY = "last_selected_model_v1";
+      const CONV_KEY = conversationId
+        ? `model_for_conversation:${conversationId}`
+        : undefined;
+
+      const tryRead = (key?: string | undefined): string | null =>
+        key ? (window.localStorage.getItem(key) as string | null) : null;
+
+      const isAllowed = (m: unknown): m is ModelId =>
+        typeof m === "string" &&
+        (ALLOWED_MODEL_IDS as readonly string[]).includes(m);
+
+      const fromConv = tryRead(CONV_KEY || undefined);
+      if (isAllowed(fromConv)) {
+        setSelectedModel(fromConv);
+        return;
+      }
+      const fromGlobal = tryRead(GLOBAL_KEY);
+      if (isAllowed(fromGlobal)) {
+        setSelectedModel(fromGlobal);
+        return;
+      }
+      setSelectedModel(DEFAULT_MODEL_ID);
+    } catch {}
+  }, [conversationId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,7 +156,20 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
             </label>
             <Select
               value={selectedModel}
-              onValueChange={(val: string) => setSelectedModel(val as ModelId)}
+              onValueChange={(val: string) => {
+                const next = val as ModelId;
+                setSelectedModel(next);
+                try {
+                  if (typeof window !== "undefined") {
+                    const GLOBAL_KEY = "last_selected_model_v1";
+                    const CONV_KEY = conversationId
+                      ? `model_for_conversation:${conversationId}`
+                      : undefined;
+                    window.localStorage.setItem(GLOBAL_KEY, next);
+                    if (CONV_KEY) window.localStorage.setItem(CONV_KEY, next);
+                  }
+                } catch {}
+              }}
               disabled={isLoading}
             >
               <SelectTrigger className="h-8 w-[200px] px-2 py-1 text-sm">

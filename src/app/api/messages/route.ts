@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   if (!beforeId) {
     const newest = await supabase
       .from("chats")
-      .select("id, sender, message, created_at")
+      .select("id, sender, message, created_at, model")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })

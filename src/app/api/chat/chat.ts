@@ -125,10 +125,10 @@ export const chat = async (
     (result as unknown as { content: string }).content ?? "",
   );
 
-  // Store user message in chat_history
-  await createChat(conversationId, query, "user");
-  // Store assistant message in chat_history
-  await createChat(conversationId, assistantMessage, "assistant");
+  // Store user message in chat_history (persist selected model)
+  await createChat(conversationId, query, "user", model);
+  // Store assistant message in chat_history (persist selected model)
+  await createChat(conversationId, assistantMessage, "assistant", model);
 
   return assistantMessage;
 };

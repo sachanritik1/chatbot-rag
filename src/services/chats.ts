@@ -8,6 +8,7 @@ export type ChatHistory = {
   message: string;
   created_at: string;
   id?: string;
+  model?: string | null;
 };
 
 export const getChatHistoryByConversationId = async (
@@ -19,7 +20,7 @@ export const getChatHistoryByConversationId = async (
   // Fetch all chat history for this conversation
   const response = await supabase
     .from("chats")
-    .select("id, sender, message, created_at")
+    .select("id, sender, message, created_at, model")
     .eq("conversation_id", conversationId)
     // get latest first, we'll reverse below so UI sees chronological order
     .order("created_at", { ascending: false })
@@ -56,7 +57,7 @@ export const getOlderChatHistoryByConversationId = async (
   }
   const response = await supabase
     .from("chats")
-    .select("id, sender, message, created_at")
+    .select("id, sender, message, created_at, model")
     .eq("conversation_id", conversationId)
     .or(
       `created_at.lt.${cursor.data.created_at},and(created_at.eq.${cursor.data.created_at},id.lt.${beforeMessageId})`,
@@ -93,6 +94,7 @@ export const createChat = async (
   conversationId: string,
   message: string,
   sender: "user" | "assistant",
+  model?: string | null,
   supabaseOverride?: SupabaseClient,
 ) => {
   const supabase = supabaseOverride ?? (await createClient());
@@ -101,6 +103,7 @@ export const createChat = async (
       conversation_id: conversationId,
       sender,
       message,
+      model: model ?? null,
     },
   ]);
   if (response.error) {

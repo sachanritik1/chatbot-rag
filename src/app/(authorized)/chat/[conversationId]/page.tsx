@@ -52,6 +52,7 @@ const Page = async ({ params }: Props) => {
       role: chat.sender === "assistant" ? ("bot" as const) : ("user" as const),
       content: chat.message,
       createdAt: chat.created_at,
+      model: chat.model ?? null,
     })) || [];
   const initialHasMore =
     (chatsResponse.totalPages ?? 1) > 1 &&

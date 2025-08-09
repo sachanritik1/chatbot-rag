@@ -9,6 +9,7 @@ export type Message = {
   role: "user" | "bot";
   content: string;
   timestamp: Date;
+  model?: string | null;
 };
 
 interface MessageListProps {

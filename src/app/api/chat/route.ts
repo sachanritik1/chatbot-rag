@@ -116,8 +116,8 @@ export async function POST(req: NextRequest) {
     );
     const chatHistory = historyRes?.data || [];
 
-    // Insert the user message immediately
-    await createChat(conversationId, query, "user", supabase);
+    // Insert the user message immediately (persist selected model)
+    await createChat(conversationId, query, "user", model, supabase);
 
     // Prepare prompt
     const formatMessages = (
@@ -189,6 +189,7 @@ export async function POST(req: NextRequest) {
                 conversationId,
                 assistantBuffer,
                 "assistant",
+                model,
                 supabase,
               );
             }

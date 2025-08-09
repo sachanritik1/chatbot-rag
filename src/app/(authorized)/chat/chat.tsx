@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import { useChatHandler } from "@/hooks/use-chat-handler";
+import { ALLOWED_MODEL_IDS, type ModelId } from "@/config/models";
 
 type ChatPageProps = {
   title?: string;
@@ -12,6 +13,7 @@ type ChatPageProps = {
     role: "user" | "bot";
     content: string;
     createdAt?: string;
+    model?: string | null;
   }[];
   initialHasMore?: boolean;
 };
@@ -40,6 +42,16 @@ export default function ChatPage({
     hasMore,
   } = useChatHandler(initialMessages, initialHasMore);
 
+  const lastWithModel = [...(prevMessages || [])]
+    .reverse()
+    .find(
+      (m) =>
+        typeof m.model === "string" &&
+        (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model as string),
+    );
+  const initialModel =
+    (lastWithModel?.model as ModelId | undefined) || undefined;
+
   return (
     <Card className="size-full max-h-[calc(100%-2.5rem)]">
       <CardContent className="h-full max-h-[calc(100%-2.5rem)] space-y-5 overflow-y-auto px-4 py-6">
@@ -64,7 +76,11 @@ export default function ChatPage({
       </CardContent>
 
       <CardFooter>
-        <ChatInputForm onSubmit={handleSendMessage} isLoading={isLoading} />
+        <ChatInputForm
+          onSubmit={handleSendMessage}
+          isLoading={isLoading}
+          initialModel={initialModel}
+        />
       </CardFooter>
     </Card>
   );
