@@ -17,6 +17,7 @@ export function createChatLlm({ model }: LlmFactoryParams = {}) {
       ) {
         params.temperature = cfg.defaultParams.temperature;
       }
+      console.log("params", params);
       return new ChatOpenAI(params as { model: string; temperature?: number });
     }
     default: {

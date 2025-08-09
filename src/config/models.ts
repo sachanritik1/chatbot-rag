@@ -1,5 +1,5 @@
 export const ALLOWED_MODEL_IDS = [
-  //   "gpt-5-mini",
+  // "gpt-5-mini",
   "gpt-4o",
   "gpt-4o-mini",
 ] as const;
@@ -25,16 +25,16 @@ export type ModelConfig = {
 export const DEFAULT_MODEL_ID: ModelId = "gpt-4o-mini";
 
 const REGISTRY: Record<ModelId, ModelConfig> = {
-  //   "gpt-5-mini": {
-  //     id: "gpt-5-mini",
-  //     label: "GPT-5 Mini",
-  //     provider: "openai",
-  //     modelName: "gpt-5-mini",
-  //     supports: {
-  //       temperature: false, // per error log, this model ignores temperature
-  //       streaming: true,
-  //     },
+  // "gpt-5-mini": {
+  //   id: "gpt-5-mini",
+  //   label: "GPT-5 Mini",
+  //   provider: "openai",
+  //   modelName: "gpt-5-mini",
+  //   supports: {
+  //     temperature: false, // per error log, this model ignores temperature
+  //     streaming: true,
   //   },
+  // },
   "gpt-4o": {
     id: "gpt-4o",
     label: "GPT-4o",

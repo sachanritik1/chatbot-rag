@@ -39,6 +39,7 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
     setMessage("");
 
     try {
+      console.log("selected model", selectedModel);
       await onSubmit(
         currentMessage,
         fileInputRef.current?.files?.[0],

@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       query: formData.get("query"),
       conversationId: formData.get("conversationId") ?? undefined,
       file: formData.get("file") ?? undefined,
+      model: formData.get("model") ?? undefined,
     } as Record<string, unknown>;
 
     const parseResult = schema.safeParse(data);
@@ -135,6 +136,8 @@ export async function POST(req: NextRequest) {
       question: query,
       fileContext,
     });
+
+    // console.log("model", model);
 
     const llm = createChatLlm({ model });
 

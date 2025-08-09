@@ -38,8 +38,9 @@ export async function createNewConversation(
   }
 
   const llm = createChatLlm({ model });
+
   const conversationTitlePrompt = `
-          Generate a title for a new conversation based on the following question: "${query}"
+          Generate a title for a new conversation based on the following question in 4 to 5 words only: "${query}"
         `;
   const { text } = await llm.invoke(conversationTitlePrompt);
   const [response, err] = await tryCatch(createConversation(userId, text));

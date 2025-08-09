@@ -42,7 +42,7 @@ export const chat = async (
   );
 
   const chatHistory = res?.data || [];
-  console.log("Chat history:", chatHistory);
+  // console.log("Chat history:", chatHistory);
 
   console.log("Conversation ID:", conversationId);
 

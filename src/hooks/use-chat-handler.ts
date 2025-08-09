@@ -53,6 +53,8 @@ export function useChatHandler(
       formData.append("query", messageText);
       formData.append("model", model);
 
+      console.log("model", model);
+
       // Send the request and stream the response
       const res = await fetch("/api/chat", {
         method: "POST",
