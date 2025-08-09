@@ -1,15 +1,7 @@
-export const ALLOWED_MODEL_IDS = [
-  // "gpt-5-mini",
-  "gpt-4o",
-  "gpt-4o-mini",
-] as const;
-
-export type ModelId = (typeof ALLOWED_MODEL_IDS)[number];
-
 export type SupportedProvider = "openai"; // extend later: "anthropic" | "google"
 
-export type ModelConfig = {
-  id: ModelId;
+type BaseModelConfig = {
+  id: string;
   label: string;
   provider: SupportedProvider;
   modelName: string; // provider-native name
@@ -22,9 +14,7 @@ export type ModelConfig = {
   };
 };
 
-export const DEFAULT_MODEL_ID: ModelId = "gpt-4o-mini";
-
-const REGISTRY: Record<ModelId, ModelConfig> = {
+const REGISTRY = {
   // "gpt-5-mini": {
   //   id: "gpt-5-mini",
   //   label: "GPT-5 Mini",
@@ -57,13 +47,27 @@ const REGISTRY: Record<ModelId, ModelConfig> = {
     },
     defaultParams: { temperature: 0.2 },
   },
-};
+} as const satisfies Record<string, BaseModelConfig>;
+
+export type ModelId = keyof typeof REGISTRY;
+
+export type ModelConfig = Omit<BaseModelConfig, "id"> & { id: ModelId };
+
+export const ALLOWED_MODEL_IDS = Object.keys(REGISTRY) as [
+  ModelId,
+  ...ModelId[],
+];
+
+export const DEFAULT_MODEL_ID: ModelId = "gpt-4o-mini";
 
 export function getModelConfig(modelId?: string | null): ModelConfig {
   const id = (modelId as ModelId) || DEFAULT_MODEL_ID;
-  return REGISTRY[id] ?? REGISTRY[DEFAULT_MODEL_ID];
+  const cfg =
+    (REGISTRY as Record<ModelId, BaseModelConfig>)[id] ??
+    (REGISTRY as Record<ModelId, BaseModelConfig>)[DEFAULT_MODEL_ID];
+  return cfg as ModelConfig;
 }
 
-export const MODEL_OPTIONS = (Object.values(REGISTRY) as ModelConfig[]).map(
-  (cfg) => ({ value: cfg.id, label: cfg.label }),
+export const MODEL_OPTIONS = (Object.values(REGISTRY) as BaseModelConfig[]).map(
+  (cfg) => ({ value: cfg.id as ModelId, label: cfg.label }),
 );
