@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+// import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
@@ -21,17 +21,17 @@ export async function login(formData: FormData) {
 
   const parsedData = loginSchema.safeParse(data);
   if (!parsedData.success) {
-    throw new Error(parsedData.error.errors.map((e) => e.message).join(", "));
+    throw new Error("Email or password is not valid");
   }
 
   const { error } = await supabase.auth.signInWithPassword(parsedData.data);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error("Invalid credentials");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  // revalidatePath("/", "layout");
+  redirect("/chat");
 }
 
 export async function signup(formData: FormData) {
@@ -44,18 +44,15 @@ export async function signup(formData: FormData) {
 
   const parsedData = loginSchema.safeParse(data);
   if (!parsedData.success) {
-    const errorMessage = parsedData.error.errors
-      .map((e) => e.message)
-      .join(", ");
-    throw new Error(errorMessage);
+    throw new Error("Email or password is not valid");
   }
 
   const { error } = await supabase.auth.signUp(parsedData.data);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error("Email already in use");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  // revalidatePath("/", "layout");
+  redirect("/chat");
 }
