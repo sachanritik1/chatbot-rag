@@ -3,7 +3,8 @@
 // import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/utils/supabase/server";
+import { AuthService } from "@/domain/auth/AuthService";
+import { SupabaseAuthRepository } from "@/infrastructure/repos/AuthRepository";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -12,7 +13,7 @@ const loginSchema = z.object({
 });
 
 export async function login(formData: FormData) {
-  const supabase = await createClient();
+  const auth = new AuthService(new SupabaseAuthRepository());
 
   const data = {
     email: formData.get("email"),
@@ -24,18 +25,14 @@ export async function login(formData: FormData) {
     throw new Error("Email or password is not valid");
   }
 
-  const { error } = await supabase.auth.signInWithPassword(parsedData.data);
-
-  if (error) {
-    throw new Error("Invalid credentials");
-  }
+  await auth.login(parsedData.data);
 
   // revalidatePath("/", "layout");
   redirect("/chat");
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient();
+  const auth = new AuthService(new SupabaseAuthRepository());
 
   const data = {
     email: formData.get("email"),
@@ -47,11 +44,7 @@ export async function signup(formData: FormData) {
     throw new Error("Email or password is not valid");
   }
 
-  const { error } = await supabase.auth.signUp(parsedData.data);
-
-  if (error) {
-    throw new Error("Email already in use");
-  }
+  await auth.signup(parsedData.data);
 
   // revalidatePath("/", "layout");
   redirect("/chat");

@@ -32,7 +32,10 @@ export const addDocumentsToStore = async (
   // Ensure every document has the conversationId in metadata
   const docsWithConversation = documents.map((doc) => ({
     ...doc,
-    conversation_id: conversationId,
+    metadata: {
+      ...(doc.metadata || {}),
+      conversation_id: conversationId,
+    },
   }));
 
   console.log("Adding documents to vector store:", docsWithConversation);

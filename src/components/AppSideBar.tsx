@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
-import { getAllConversationsByUserId } from "@/services/conversations";
+import { ConversationService } from "@/domain/conversations/ConversationService";
+import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
+import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
 import { tryCatch } from "@/utils/try-catch";
 import {
   Sidebar,
@@ -15,6 +17,7 @@ import ConversationCard from "./ConversationCard";
 import NewConversationButton from "./NewConversationButton";
 import ThemeToggleWrapper from "./ThemeToggleWrapper";
 import { MessageSquare, LogOut } from "lucide-react";
+import { Conversation } from "@/domain/conversations/types";
 
 const logout = async () => {
   "use server";
@@ -32,7 +35,14 @@ export default async function AppSideBar() {
     return <div>Error fetching user data</div>;
   }
 
-  const conversationsPromise = getAllConversationsByUserId(userId);
+  const conversationsPromise = (async () => {
+    const service = new ConversationService(
+      new SupabaseConversationsRepository(),
+      new SupabaseChatsRepository(),
+    );
+    const list = await service.listForUser(userId);
+    return { data: list } as PostgrestSingleResponse<Conversation[]>;
+  })();
 
   return (
     <Sidebar className="border-border/40 border-r">

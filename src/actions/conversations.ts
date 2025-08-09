@@ -1,11 +1,11 @@
 "use server";
 
 import { chat } from "@/app/api/chat/chat";
-import {
-  createConversation,
-  deleteConversationById,
-} from "@/services/conversations";
-import { getUser } from "@/services/users";
+import { ConversationService } from "@/domain/conversations/ConversationService";
+import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
+import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { UserService } from "@/domain/users/UserService";
+import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { tryCatch } from "@/utils/try-catch";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import { createChatLlm } from "@/lib/llm";
@@ -31,9 +31,10 @@ export async function createNewConversation(
   }
   const { query, file, model } = parsedData.data;
 
-  const [user, userError] = await tryCatch(getUser());
-  const userId = user?.data.user?.id;
-  if (!userId || userError) {
+  const userService = new UserService(new SupabaseUsersRepository());
+  const current = await userService.requireCurrentUser().catch(() => null);
+  const userId = current?.id;
+  if (!userId) {
     redirect("/login");
   }
 
@@ -43,9 +44,14 @@ export async function createNewConversation(
           Generate a title for a new conversation based on the following question in 4 to 5 words only: "${query}"
         `;
   const { text } = await llm.invoke(conversationTitlePrompt);
-  const [response, err] = await tryCatch(createConversation(userId, text));
-  const conversationId = response?.data.id;
-  if (err || response.error || !conversationId) {
+  const conversationService = new ConversationService(
+    new SupabaseConversationsRepository(),
+    new SupabaseChatsRepository(),
+  );
+  let conversationId: string;
+  try {
+    conversationId = await conversationService.create(userId, text);
+  } catch {
     return "Error creating conversation";
   }
 
@@ -71,18 +77,22 @@ export async function deleteConversation(props: deleteConversationSchemaType) {
   if (!parsedData.success) {
     return parsedData.error.message;
   }
-  const [user, userError] = await tryCatch(getUser());
-  const userId = user?.data.user?.id;
-  if (!userId || userError) {
+  const userService = new UserService(new SupabaseUsersRepository());
+  const current = await userService.requireCurrentUser().catch(() => null);
+  const userId = current?.id;
+  if (!userId) {
     redirect("/login");
   }
 
   const { conversationId } = parsedData.data;
-  const [response, error] = await tryCatch(
-    deleteConversationById(conversationId),
+  const conversationService = new ConversationService(
+    new SupabaseConversationsRepository(),
+    new SupabaseChatsRepository(),
   );
-
-  if (error || response.error || !response.data) {
+  try {
+    const ok = await conversationService.deleteForUser(userId, conversationId);
+    if (!ok) return "Error deleting conversation";
+  } catch {
     return "Error deleting conversation";
   }
 

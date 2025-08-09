@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
-import { addDocumentsToStore } from "@/utils/vector-store";
-import { createClient } from "@/utils/supabase/server";
+import { UserService } from "@/domain/users/UserService";
+import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { ConversationService } from "@/domain/conversations/ConversationService";
+import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
+import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { DocumentService } from "@/domain/documents/DocumentService";
+import { IngestionService } from "@/domain/ingestion/IngestionService";
+import { DocumentIndexer } from "@/domain/documents/DocumentIndexer";
+import { VectorStoreService } from "@/domain/vector/VectorStoreService";
+import { SupabaseVectorAdapter } from "@/infrastructure/vector/SupabaseVectorAdapter";
+import { SupabaseDocumentsRepository } from "@/infrastructure/repos/DocumentsRepository";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,61 +20,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const supabase = await createClient();
-
-    const user = await supabase.auth.getUser();
-    const userId = user.data?.user?.id;
+    const userService = new UserService(new SupabaseUsersRepository());
+    const user = await userService.requireCurrentUser().catch(() => null);
+    const userId = user?.id;
 
     if (!userId) {
       return NextResponse.json(
         { error: "No user_id provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Create a new conversation for this upload
-    const { data: conversation, error: convError } = await supabase
-      .from("conversations")
-      .insert([{ user_id: userId, title: file.name }])
-      .select()
-      .single();
+    // Create conversation using service
+    const conversationService = new ConversationService(
+      new SupabaseConversationsRepository(),
+      new SupabaseChatsRepository(),
+    );
+    const conversationId = await conversationService.create(userId, file.name);
 
-    if (convError || !conversation) {
-      return NextResponse.json(
-        { error: "Failed to create conversation" },
-        { status: 500 }
-      );
-    }
-    console.log("Conversation created:", conversation);
-
-    const conversationId = conversation.id;
-
-    const loader = new WebPDFLoader(file);
-
-    const docs = await loader.load();
-
-    // Split text into chunks
-    const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 500,
-      chunkOverlap: 100,
-    });
-
-    const chunks = await splitter.splitDocuments(docs);
-
-    // Add documents to the vector store
-    await addDocumentsToStore(chunks, conversationId);
+    // Ingest PDF and add to vector store via services
+    const vectorService = new VectorStoreService(new SupabaseVectorAdapter());
+    const ingestionService = new IngestionService(
+      new DocumentIndexer(500, 100),
+      vectorService,
+    );
+    const documentService = new DocumentService(
+      new SupabaseDocumentsRepository(),
+      ingestionService,
+      conversationService,
+    );
+    await documentService.addPdf(userId, conversationId, file);
 
     return NextResponse.json({
       status: "success",
       message: "PDF processed successfully",
-      chunks: chunks.length,
+      chunks: undefined,
       conversationId: conversationId,
     });
   } catch (error) {
     console.error("Error processing PDF:", error);
     return NextResponse.json(
       { error: "Failed to process PDF" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
