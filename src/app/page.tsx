@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MessageSquareText, ShieldCheck, Zap, FileText } from "lucide-react";
+import { UserService } from "@/domain/users/UserService";
+import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "AI Chat App",
   description: "Chat with LLMs — try as a guest or sign in",
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const userService = new UserService(new SupabaseUsersRepository());
+  const current = await userService.requireCurrentUser().catch(() => null);
+  if (current?.id) redirect("/chat");
   return (
     <main className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:px-6 sm:py-16">
       {/* Decorative background */}
