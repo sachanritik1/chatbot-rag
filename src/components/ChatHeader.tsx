@@ -9,15 +9,14 @@ type ChatHeaderProps = {
 
 export default function ChatHeader({ title }: ChatHeaderProps) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <SidebarTrigger />
-        {title ? (
-          <h1 className="truncate text-lg font-semibold" title={title}>
-            {title}
-          </h1>
-        ) : null}
-      </div>
+    <div className="mb-2 flex max-w-[100dvh-8rem] items-center justify-between gap-3 sm:max-w-[100dvw-20rem]">
+      <SidebarTrigger />
+      {title ? (
+        <h1 className="truncate text-lg font-semibold" title={title}>
+          {title}
+        </h1>
+      ) : null}
+
       <ThemeToggle />
     </div>
   );

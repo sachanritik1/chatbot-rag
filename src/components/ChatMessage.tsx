@@ -29,8 +29,8 @@ export function ChatMessage({
     >
       <div
         className={cn(
-          "flex max-w-[80%] gap-3",
-          isUser ? "flex-row-reverse" : "flex-row",
+          "flex gap-3 sm:max-w-[80%]",
+          isUser ? "flex-col items-end" : "flex-col items-start",
         )}
       >
         <div
