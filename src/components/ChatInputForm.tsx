@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Send, Upload, X } from "lucide-react";
 import { Input } from "./ui/input";
 import { MODEL_OPTIONS, DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ChatInputFormProps {
   onSubmit: (
@@ -101,18 +108,22 @@ export function ChatInputForm({ onSubmit, isLoading }: ChatInputFormProps) {
             <label className="text-xs text-gray-600 dark:text-gray-300">
               Model
             </label>
-            <select
-              className="rounded-md border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-[#23272f]"
+            <Select
               value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as ModelId)}
+              onValueChange={(val: string) => setSelectedModel(val as ModelId)}
               disabled={isLoading}
             >
-              {MODEL_OPTIONS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-8 w-[200px] px-2 py-1 text-sm">
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                {MODEL_OPTIONS.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <input
             type="file"
