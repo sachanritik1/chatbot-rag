@@ -3,6 +3,7 @@ import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { redirect } from "next/navigation";
 import LoginThemeToggle from "@/components/LoginThemeToggle";
+import Link from "next/link";
 
 export default async function Login({
   searchParams,
@@ -16,7 +17,24 @@ export default async function Login({
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] transition-colors duration-300 dark:from-[#18181b] dark:to-[#23272f]">
       <LoginThemeToggle />
-      <AuthForm defaultMode={sp?.mode === "signup" ? "signup" : "login"} />
+      <div className="flex w-full max-w-md flex-col items-center gap-4 px-4">
+        <AuthForm defaultMode={sp?.mode === "signup" ? "signup" : "login"} />
+        <div className="flex items-center gap-3 text-sm">
+          <Link
+            href="/guest"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Continue as guest
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link
+            href="/"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Go to Home page
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
