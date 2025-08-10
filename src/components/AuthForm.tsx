@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login, signup } from "@/actions/auth";
+import { login, signup, signInWithGoogle } from "@/actions/auth";
 
 export function AuthForm({
   defaultMode = "login",
@@ -80,6 +80,33 @@ export function AuthForm({
             />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background text-muted-foreground px-2">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={async () => {
+              setIsLoading(true);
+              setError("");
+              try {
+                await signInWithGoogle();
+              } catch (err) {
+                setError((err as Error).message);
+                setIsLoading(false);
+              }
+            }}
+          >
+            Continue with Google
+          </Button>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>

@@ -2,10 +2,12 @@
 
 // import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 import { AuthService } from "@/domain/auth/AuthService";
 import { SupabaseAuthRepository } from "@/infrastructure/repos/AuthRepository";
 import { z } from "zod";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -48,4 +50,33 @@ export async function signup(formData: FormData) {
 
   // revalidatePath("/", "layout");
   redirect("/chat");
+}
+
+export async function signInWithGoogle() {
+  const supabase = await createSupabaseServerClient();
+
+  const originHeader = (await headers()).get("origin");
+  const siteUrl =
+    originHeader || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${siteUrl}/auth/callback`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  });
+
+  if (error) {
+    throw new Error("Failed to start Google sign-in. Please try again.");
+  }
+
+  if (data?.url) {
+    redirect(data.url);
+  }
+
+  redirect("/login");
 }
