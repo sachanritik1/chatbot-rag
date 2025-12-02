@@ -4,7 +4,7 @@ import { deleteConversation } from "@/actions/conversations";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, GitBranch } from "lucide-react";
 import { useState } from "react";
 
 // const formatDate = (dateString: string) => {
@@ -15,7 +15,13 @@ import { useState } from "react";
 const ConversationCard = ({
   conversation,
 }: {
-  conversation: { id: string; title: string; created_at: string };
+  conversation: {
+    id: string;
+    title: string;
+    created_at: string;
+    parent_conversation_id?: string | null;
+    branch_label?: string | null;
+  };
 }) => {
   const router = useRouter();
   const params = useParams();
@@ -34,9 +40,19 @@ const ConversationCard = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex flex-1 flex-col gap-1">
-          <div className="line-clamp-2 text-sm leading-tight font-medium">
-            {conversation.title}
+          <div className="flex items-center gap-2">
+            {conversation.parent_conversation_id && (
+              <GitBranch className="h-3 w-3 text-muted-foreground shrink-0" />
+            )}
+            <div className="line-clamp-2 text-sm leading-tight font-medium flex-1">
+              {conversation.title}
+            </div>
           </div>
+          {conversation.branch_label && (
+            <div className="text-muted-foreground text-xs">
+              {conversation.branch_label}
+            </div>
+          )}
           {/* <div className="text-muted-foreground flex items-center text-xs">
             <span>{formatDate(conversation.created_at)}</span>
           </div> */}

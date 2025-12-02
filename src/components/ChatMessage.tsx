@@ -3,12 +3,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
+import { BranchButton } from "./BranchButton";
 
 type ChatMessageProps = {
   role: "user" | "bot";
   content: string;
   timestamp?: Date;
   isLatest?: boolean;
+  messageId?: string;
+  conversationId?: string;
 };
 
 export function ChatMessage({
@@ -16,13 +19,15 @@ export function ChatMessage({
   content,
   timestamp,
   isLatest,
+  messageId,
+  conversationId,
 }: ChatMessageProps) {
   const isUser = role === "user";
 
   return (
     <div
       className={cn(
-        "animate-in fade-in-0 flex w-full",
+        "animate-in fade-in-0 group relative flex w-full",
         isUser ? "justify-end" : "justify-start",
         isLatest && "slide-in-from-bottom-5",
       )}
@@ -140,6 +145,16 @@ export function ChatMessage({
           )}
         </div>
       </div>
+
+      {/* Branch button - show on bot messages only */}
+      {!isUser && messageId && conversationId && (
+        <div className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100">
+          <BranchButton
+            conversationId={conversationId}
+            messageId={messageId}
+          />
+        </div>
+      )}
     </div>
   );
 }

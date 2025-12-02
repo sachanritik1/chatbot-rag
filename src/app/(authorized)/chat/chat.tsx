@@ -40,6 +40,7 @@ export default function ChatPage({
     loadPreviousMessages,
     isLoadingMore,
     hasMore,
+    conversationId,
   } = useChatHandler(initialMessages, initialHasMore);
 
   const lastWithModel = [...(prevMessages || [])]
@@ -72,6 +73,7 @@ export default function ChatPage({
           isLoading={isLoading}
           loadingMessage={loadingMessage}
           shouldAutoScroll={!isLoadingMore}
+          conversationId={conversationId}
         />
       </CardContent>
 

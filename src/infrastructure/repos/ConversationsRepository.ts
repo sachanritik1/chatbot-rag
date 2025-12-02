@@ -1,6 +1,7 @@
 import type {
   ConversationsRepository,
   Conversation,
+  ConversationTree,
 } from "@/domain/conversations/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -22,7 +23,9 @@ export class SupabaseConversationsRepository
     const supabase = await createClient();
     const res = await supabase
       .from("conversations")
-      .select("id, user_id, title, created_at")
+      .select(
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     return (res.data ?? []) as Conversation[];
@@ -52,9 +55,84 @@ export class SupabaseConversationsRepository
     const supabase = await createClient();
     const res = await supabase
       .from("conversations")
-      .select("id, user_id, title, created_at")
+      .select(
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+      )
       .eq("id", conversationId)
       .single();
     return res.error || !res.data ? null : (res.data as Conversation);
+  }
+
+  async createBranch(
+    userId: string,
+    parentConversationId: string,
+    parentMessageId: string,
+    title: string,
+    branchLabel?: string,
+  ): Promise<{ id: string } | null> {
+    const supabase = await createClient();
+
+    // Verify ownership
+    const parentOwned = await this.verifyOwnership(userId, parentConversationId);
+    if (!parentOwned) return null;
+
+    // Create new conversation
+    const res = await supabase
+      .from("conversations")
+      .insert([
+        {
+          user_id: userId,
+          title,
+          parent_conversation_id: parentConversationId,
+          parent_message_id: parentMessageId,
+          branch_label: branchLabel || null,
+        },
+      ])
+      .select("id")
+      .single();
+
+    if (res.error || !res.data) return null;
+
+    const newConversationId = res.data.id;
+
+    // Copy messages up to branch point
+    const copyRes = await supabase.rpc("copy_messages_until", {
+      source_conv_id: parentConversationId,
+      target_conv_id: newConversationId,
+      until_message_id: parentMessageId,
+    });
+
+    if (copyRes.error) {
+      await this.deleteById(newConversationId);
+      return null;
+    }
+
+    return { id: newConversationId };
+  }
+
+  async getBranches(conversationId: string): Promise<Conversation[]> {
+    const supabase = await createClient();
+    const res = await supabase
+      .from("conversations")
+      .select(
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+      )
+      .eq("parent_conversation_id", conversationId)
+      .order("branch_created_at", { ascending: true });
+
+    return (res.data ?? []) as Conversation[];
+  }
+
+  async getBranchTree(rootConversationId: string): Promise<ConversationTree> {
+    const root = await this.getById(rootConversationId);
+    if (!root) throw new Error("Conversation not found");
+
+    const buildTree = async (conv: Conversation): Promise<ConversationTree> => {
+      const branches = await this.getBranches(conv.id);
+      const branchTrees = await Promise.all(branches.map((b) => buildTree(b)));
+      return { conversation: conv, branches: branchTrees };
+    };
+
+    return buildTree(root);
   }
 }

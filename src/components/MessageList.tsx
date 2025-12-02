@@ -17,6 +17,7 @@ interface MessageListProps {
   isLoading: boolean;
   loadingMessage?: string;
   shouldAutoScroll?: boolean;
+  conversationId?: string;
 }
 
 export function MessageList({
@@ -24,6 +25,7 @@ export function MessageList({
   isLoading,
   loadingMessage,
   shouldAutoScroll = true,
+  conversationId,
 }: MessageListProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef<number>(0);
@@ -192,6 +194,8 @@ export function MessageList({
           content={msg.content}
           timestamp={msg.timestamp}
           isLatest={i === messages.length - 1}
+          messageId={msg.id}
+          conversationId={conversationId}
         />
       ))}
 

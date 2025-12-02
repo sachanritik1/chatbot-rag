@@ -143,5 +143,6 @@ export function useChatHandler(
     loadPreviousMessages,
     isLoadingMore,
     hasMore,
+    conversationId,
   };
 }
