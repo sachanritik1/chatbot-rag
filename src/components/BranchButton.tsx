@@ -28,12 +28,8 @@ export function BranchButton({
     setIsLoading(true);
     try {
       const result = await createBranch({ conversationId, messageId });
-      if (result?.error) {
-        alert("Failed to create branch. Please try again.");
-      }
     } catch (error) {
       console.error("Error creating branch:", error);
-      alert("Failed to create branch. Please try again.");
     } finally {
       setIsLoading(false);
     }

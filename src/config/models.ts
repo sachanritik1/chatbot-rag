@@ -34,7 +34,7 @@ const REGISTRY = {
       temperature: true,
       streaming: true,
     },
-    defaultParams: { temperature: 0.2 },
+    defaultParams: { temperature: 1 },
   },
   "gpt-4o-mini": {
     id: "gpt-4o-mini",
@@ -45,7 +45,7 @@ const REGISTRY = {
       temperature: true,
       streaming: true,
     },
-    defaultParams: { temperature: 0.2 },
+    defaultParams: { temperature: 1 },
   },
 } as const satisfies Record<string, BaseModelConfig>;
 

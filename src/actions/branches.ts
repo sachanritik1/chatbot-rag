@@ -13,9 +13,9 @@ const createBranchSchema = z.object({
   title: z.string().optional(),
 });
 
-export async function createBranch(
-  data: z.infer<typeof createBranchSchema>,
-) {
+export async function createBranch(data: z.infer<typeof createBranchSchema>) {
+  let branchId: string | null = null;
+
   try {
     const parsed = createBranchSchema.safeParse(data);
     if (!parsed.success) {
@@ -30,12 +30,15 @@ export async function createBranch(
       console.error("User auth error:", err);
       return null;
     });
+
     if (!user?.id) {
+      // ✅ DO NOT CATCH redirects
       redirect("/login");
     }
 
     const repo = new SupabaseConversationsRepository();
     const original = await repo.getById(conversationId);
+
     if (!original) {
       console.error("Original conversation not found:", conversationId);
       return { error: "Conversation not found" };
@@ -67,13 +70,17 @@ export async function createBranch(
     }
 
     console.log("Branch created successfully:", result.id);
+
+    branchId = result.id;
+
     revalidatePath("/(authorized)/chat", "layout");
-    redirect(`/chat/${result.id}`);
   } catch (error) {
     console.error("Error in createBranch:", error);
     return {
-      error:
-        error instanceof Error ? error.message : "Failed to create branch",
+      error: error instanceof Error ? error.message : "Failed to create branch",
     };
   }
+
+  // ✅ MUST BE OUTSIDE TRY/CATCH
+  redirect(`/chat/${branchId}`);
 }
