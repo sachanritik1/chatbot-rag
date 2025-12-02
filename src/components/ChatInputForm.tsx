@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Upload, X } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import {
   MODEL_OPTIONS,
   DEFAULT_MODEL_ID,
@@ -21,23 +21,15 @@ import {
 import { Textarea } from "./ui/textarea";
 
 interface ChatInputFormProps {
-  onSubmit: (
-    message: string,
-    file?: File | null,
-    model?: ModelId,
-  ) => Promise<void>;
+  onSubmit: (message: string, model?: ModelId) => Promise<void>;
   isLoading: boolean;
   initialModel?: ModelId;
-  hideUpload?: boolean;
-  uploadSlot?: ReactNode;
 }
 
 export function ChatInputForm({
   onSubmit,
   isLoading,
   initialModel,
-  hideUpload,
-  uploadSlot,
 }: ChatInputFormProps) {
   const params = useParams();
   const conversationId =
@@ -45,8 +37,6 @@ export function ChatInputForm({
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedModel, setSelectedModel] = useState<ModelId>(
     initialModel || DEFAULT_MODEL_ID,
   );
@@ -97,33 +87,13 @@ export function ChatInputForm({
 
     try {
       console.log("selected model", selectedModel);
-      await onSubmit(
-        currentMessage,
-        fileInputRef.current?.files?.[0],
-        selectedModel,
-      );
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-        setSelectedFile(null);
-      }
+      await onSubmit(currentMessage, selectedModel);
     } catch (err) {
       const errorMessage =
         (err as { message?: string }).message || "Request failed";
       setError(errorMessage);
     }
   }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setSelectedFile(file ? file.name : null);
-  };
-
-  const clearSelectedFile = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-      setSelectedFile(null);
-    }
-  };
 
   return (
     <>
@@ -188,49 +158,6 @@ export function ChatInputForm({
               ))}
             </SelectContent>
           </Select>
-
-          <div className="flex items-center gap-2 overflow-hidden">
-            {hideUpload ? (
-              (uploadSlot ?? null)
-            ) : (
-              <>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  className="flex items-center gap-1 text-gray-600 sm:gap-2"
-                  type="button"
-                >
-                  <Upload className="size-4" />
-                  <span className="hidden sm:block">Upload</span> PDF
-                </Button>
-                {selectedFile && (
-                  <div className="flex items-center gap-[2px] overflow-hidden rounded-full bg-green-50 px-2 py-1 sm:gap-1 dark:bg-green-900/20">
-                    <span
-                      className="truncate text-sm text-green-600 dark:text-green-400"
-                      title={selectedFile}
-                    >
-                      {selectedFile}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="flex h-5 w-5 items-center justify-center p-0"
-                      onClick={clearSelectedFile}
-                    >
-                      <X className="h-3 w-3 text-green-600 dark:text-green-400" />
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
       </form>
       {error && <div className="mt-1 px-2 text-sm text-red-600">{error}</div>}

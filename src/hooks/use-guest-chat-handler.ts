@@ -11,7 +11,6 @@ export function useGuestChatHandler() {
 
   const handleSendMessage = async (
     messageText: string,
-    file?: File | null,
     model: ModelId = DEFAULT_MODEL_ID,
   ) => {
     setIsLoading(true);
@@ -26,7 +25,6 @@ export function useGuestChatHandler() {
       const formData = new FormData();
       formData.append("query", messageText);
       formData.append("model", model);
-      // file uploads are not supported in guest flow
 
       const res = await fetch("/api/guest-chat", {
         method: "POST",

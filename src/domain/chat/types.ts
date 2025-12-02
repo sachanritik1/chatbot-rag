@@ -1,19 +1,11 @@
-import type { Document } from "@langchain/core/documents";
 import type { ChatHistory } from "@/domain/chat/models";
 
 export type SenderRole = "user" | "assistant";
 
 export interface LlmClient {
-  stream(prompt: string): Promise<AsyncIterable<unknown>>;
-}
-
-export interface VectorStore {
-  addDocuments(documents: Array<Document>): Promise<unknown>;
-  similaritySearch(
-    query: string,
-    k: number,
-    filter?: (rpc: unknown) => unknown,
-  ): Promise<Array<{ pageContent: string }>>;
+  stream(prompt: string): Promise<{
+    textStream: AsyncIterable<string>;
+  }>;
 }
 
 export interface ChatsRepository {
@@ -46,5 +38,4 @@ export interface ConversationsRepository {
 export type BuildPromptFn = (args: {
   history: ChatHistory[];
   question: string;
-  fileContext: string;
 }) => Promise<string>;

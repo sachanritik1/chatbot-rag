@@ -9,7 +9,6 @@ import { buildChatService } from "@/domain/chat/buildService";
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
   conversationId: z.string().min(1, "conversationId is required"),
-  file: z.instanceof(File).optional(),
   model: z.enum(ALLOWED_MODEL_IDS).optional().default(DEFAULT_MODEL_ID),
 });
 
@@ -26,7 +25,6 @@ export async function POST(req: NextRequest) {
     const data = {
       query: formData.get("query"),
       conversationId: formData.get("conversationId") ?? undefined,
-      file: formData.get("file") ?? undefined,
       model: formData.get("model") ?? undefined,
     } as Record<string, unknown>;
 
@@ -41,7 +39,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { query, conversationId, file, model } = parseResult.data;
+    const { query, conversationId, model } = parseResult.data;
 
     const service = buildChatService(model);
 
@@ -49,7 +47,6 @@ export async function POST(req: NextRequest) {
       userId,
       conversationId,
       question: query,
-      file,
       model,
     });
 

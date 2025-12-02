@@ -15,7 +15,6 @@ import { z } from "zod";
 
 const createConversationSchema = z.object({
   query: z.string().min(1, "Query is required"),
-  file: z.instanceof(File).optional(),
   model: z.enum(ALLOWED_MODEL_IDS).optional().default(DEFAULT_MODEL_ID),
 });
 
@@ -29,7 +28,7 @@ export async function createNewConversation(
     console.log("Validation error:", parsedData.error);
     return parsedData.error.message;
   }
-  const { query, file, model } = parsedData.data;
+  const { query, model } = parsedData.data;
 
   const userService = new UserService(new SupabaseUsersRepository());
   const current = await userService.requireCurrentUser().catch(() => null);
@@ -56,7 +55,7 @@ export async function createNewConversation(
   }
 
   const [assistantMessage, error] = await tryCatch(
-    chat(userId, conversationId, query, file, model),
+    chat(userId, conversationId, query, model),
   );
 
   if (error || !assistantMessage) {

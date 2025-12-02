@@ -170,8 +170,7 @@ export function MessageList({
           How can I help you today?
         </h3>
         <p className="max-w-sm text-sm text-gray-500 dark:text-gray-400">
-          Ask me anything or upload a PDF document to get started with your AI
-          assistant.
+          Ask me anything to get started with your AI assistant.
         </p>
       </div>
     );

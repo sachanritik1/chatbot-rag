@@ -4,14 +4,11 @@ import type {
   ConversationsRepository,
   BuildPromptFn,
 } from "@/domain/chat/types";
-import { VectorStoreService } from "@/domain/vector/VectorStoreService";
-import { IngestionService } from "@/domain/ingestion/IngestionService";
 
 type SendMessageInput = {
   userId: string;
   conversationId: string;
   question: string;
-  file?: File | null;
   model?: string | null;
 };
 
@@ -19,18 +16,16 @@ export class ChatService {
   constructor(
     private readonly deps: {
       llm: LlmClient;
-      vectorService: VectorStoreService;
       chats: ChatsRepository;
       conversations: ConversationsRepository;
       buildPrompt: BuildPromptFn;
-      ingestionService: IngestionService;
     },
   ) {}
 
   async sendMessage(
     input: SendMessageInput,
   ): Promise<ReadableStream<Uint8Array>> {
-    const { userId, conversationId, question, file, model } = input;
+    const { userId, conversationId, question, model } = input;
 
     // Verify ownership
     const owns = await this.deps.conversations.verifyOwnership(
@@ -41,22 +36,7 @@ export class ChatService {
       throw new Error("Conversation not found");
     }
 
-    // Index file if provided (ignore indexing errors to keep UX smooth)
-    if (file) {
-      try {
-        await this.deps.ingestionService.indexPdfAndAdd(file, conversationId);
-      } catch (e) {
-        console.error("Error indexing PDF:", e);
-      }
-    }
-
-    // Retrieve context and history
-    const { fileContext } = await this.deps.vectorService.searchConversation(
-      question,
-      conversationId,
-      4,
-    );
-
+    // Retrieve history
     const recent = await this.deps.chats.getRecent(conversationId, 10);
     const history = (recent as { data: unknown } | { data: null })
       .data as Array<{
@@ -77,7 +57,6 @@ export class ChatService {
     const formattedPrompt = await this.deps.buildPrompt({
       history: safeHistory,
       question,
-      fileContext,
     });
 
     const encoder = new TextEncoder();

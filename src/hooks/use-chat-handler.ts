@@ -21,7 +21,6 @@ export function useChatHandler(
 
   const handleSendMessage = async (
     messageText: string,
-    file?: File | null,
     model: ModelId = DEFAULT_MODEL_ID,
   ) => {
     setIsLoading(true);
@@ -35,18 +34,11 @@ export function useChatHandler(
 
     try {
       if (!conversationId) {
-        if (file) {
-          await createNewConversation({ query: messageText, file, model });
-          return;
-        }
         await createNewConversation({ query: messageText, model });
         return;
       }
       // Prepare the request
       const formData = new FormData();
-      if (file) {
-        formData.append("file", file);
-      }
       if (conversationId) {
         formData.append("conversationId", conversationId);
       }

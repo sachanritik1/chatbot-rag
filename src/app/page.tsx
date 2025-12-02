@@ -65,10 +65,10 @@ export default async function LandingPage() {
             <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur dark:border-gray-700/60 dark:bg-white/5">
               <FileText className="h-5 w-5 text-violet-600 dark:text-violet-400" />
               <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-50">
-                RAG-ready
+                Conversation History
               </p>
               <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                Augment with your PDFs and notes
+                Keep and organize your conversations
               </p>
             </div>
             <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur dark:border-gray-700/60 dark:bg-white/5">
@@ -104,11 +104,11 @@ export default async function LandingPage() {
               </div>
               <div className="space-y-3 text-left">
                 <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-3 text-sm text-gray-900 dark:bg-gray-800/80 dark:text-gray-100">
-                  How do I summarize a PDF with citations?
+                  What are the key features of Next.js 15?
                 </div>
                 <div className="ml-auto max-w-[85%] rounded-2xl bg-blue-600 px-4 py-3 text-sm text-white dark:bg-blue-500">
-                  I can read your document, extract key points, and include
-                  citation markers. Upload a PDF and ask anything!
+                  Next.js 15 introduces React 19 support, improved performance,
+                  and enhanced developer experience with Turbopack!
                 </div>
                 <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-3 text-sm text-gray-900 dark:bg-gray-800/80 dark:text-gray-100">
                   Can I try without signing in?
