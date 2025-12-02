@@ -1,4 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
 import { getModelConfig } from "@/config/models";
 
 export type LlmFactoryParams = {
@@ -8,21 +9,22 @@ export type LlmFactoryParams = {
 export function createChatLlm({ model }: LlmFactoryParams = {}) {
   const cfg = getModelConfig(model);
 
-  switch (cfg.provider) {
-    case "openai": {
-      const params: Record<string, unknown> = { model: cfg.modelName };
-      if (
-        cfg.supports.temperature &&
-        cfg.defaultParams?.temperature !== undefined
-      ) {
-        params.temperature = cfg.defaultParams.temperature;
+  return {
+    async invoke(prompt: string) {
+      const result = await streamText({
+        model: openai(cfg.modelName),
+        prompt,
+        temperature: cfg.supports.temperature
+          ? cfg.defaultParams?.temperature
+          : undefined,
+      });
+
+      let fullText = "";
+      for await (const textPart of result.textStream) {
+        fullText += textPart;
       }
-      console.log("params", params);
-      return new ChatOpenAI(params as { model: string; temperature?: number });
-    }
-    default: {
-      // Fallback to OpenAI default for unknown provider
-      return new ChatOpenAI({ model: cfg.modelName });
-    }
-  }
+
+      return { text: fullText };
+    },
+  };
 }

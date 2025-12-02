@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { createChatLlm } from "@/lib/llm";
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
+import { getModelConfig } from "@/config/models";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 
 const schema = z.object({
@@ -90,49 +92,29 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create LLM and prompt
-    const llm = createChatLlm({ model });
+    // Create streaming response with Vercel AI SDK
+    const cfg = getModelConfig(model);
     const prompt = `You are a helpful assistant. Answer the user's question clearly and concisely.\nUser: ${query}\nAI:`;
+
+    const result = await streamText({
+      model: openai(cfg.modelName),
+      prompt,
+      temperature: cfg.supports.temperature
+        ? cfg.defaultParams?.temperature
+        : undefined,
+    });
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        (async () => {
-          try {
-            const asyncIterator = (await llm.stream(
-              prompt,
-            )) as AsyncIterable<unknown>;
-
-            // Helper to extract string content from langchain chunks
-            const extractContent = (chunk: unknown): string => {
-              const maybe = chunk as { content?: unknown; delta?: unknown };
-              if (typeof maybe?.content === "string") return maybe.content;
-              if (Array.isArray(maybe?.content)) {
-                return (maybe.content as unknown[])
-                  .map((p) =>
-                    typeof p === "string"
-                      ? p
-                      : typeof (p as { text?: unknown })?.text === "string"
-                        ? ((p as { text?: unknown }).text as string)
-                        : "",
-                  )
-                  .join("");
-              }
-              if (typeof maybe?.delta === "string") return maybe.delta;
-              return "";
-            };
-
-            for await (const chunk of asyncIterator) {
-              const content = extractContent(chunk);
-              if (content) {
-                controller.enqueue(encoder.encode(content));
-              }
-            }
-            controller.close();
-          } catch (err) {
-            controller.error(err);
+      async start(controller) {
+        try {
+          for await (const textPart of result.textStream) {
+            controller.enqueue(encoder.encode(textPart));
           }
-        })();
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
       },
     });
 

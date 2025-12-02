@@ -62,49 +62,31 @@ export class ChatService {
     const encoder = new TextEncoder();
     let assistantBuffer = "";
 
-    const extractContent = (chunk: unknown): string => {
-      const c = (chunk as { content?: unknown }).content;
-      if (typeof c === "string") return c;
-      if (Array.isArray(c)) {
-        const parts = (c as unknown[]).map((part) => {
-          if (typeof part === "string") return part;
-          const maybeObj = part as { text?: unknown };
-          return typeof maybeObj?.text === "string" ? maybeObj.text : "";
-        });
-        return parts.join("");
-      }
-      const d = (chunk as { delta?: unknown }).delta;
-      return typeof d === "string" ? d : "";
-    };
-
     const stream = new ReadableStream<Uint8Array>({
-      start: (controller) => {
-        (async () => {
-          try {
-            const asyncIterator = (await this.deps.llm.stream(
-              formattedPrompt,
-            )) as AsyncIterable<unknown>;
-            for await (const chunk of asyncIterator) {
-              const content = extractContent(chunk);
-              if (content) {
-                assistantBuffer += content;
-                controller.enqueue(encoder.encode(content));
-              }
-            }
-            if (assistantBuffer.trim().length > 0) {
-              await this.deps.chats.create(
-                conversationId,
-                assistantBuffer,
-                "assistant",
-                model ?? undefined,
-              );
-            }
-            controller.close();
-          } catch (err) {
-            console.error("Error streaming response:", err);
-            controller.error(err);
+      start: async (controller) => {
+        try {
+          const result = await this.deps.llm.stream(formattedPrompt);
+
+          // Vercel AI SDK provides textStream
+          for await (const textPart of result.textStream) {
+            assistantBuffer += textPart;
+            controller.enqueue(encoder.encode(textPart));
           }
-        })();
+
+          if (assistantBuffer.trim().length > 0) {
+            await this.deps.chats.create(
+              conversationId,
+              assistantBuffer,
+              "assistant",
+              model ?? undefined,
+            );
+          }
+
+          controller.close();
+        } catch (err) {
+          console.error("Error streaming response:", err);
+          controller.error(err);
+        }
       },
     });
 

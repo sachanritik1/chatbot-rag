@@ -1,25 +1,25 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
 import type { LlmClient } from "@/domain/chat/types";
 import { getModelConfig } from "@/config/models";
 
 export class OpenAIChatClient implements LlmClient {
-  private readonly client: ChatOpenAI;
+  private readonly modelName: string;
+  private readonly temperature?: number;
 
   constructor(modelId?: string | null) {
     const cfg = getModelConfig(modelId);
-    const params: Record<string, unknown> = { model: cfg.modelName };
-    if (
-      cfg.supports.temperature &&
-      cfg.defaultParams?.temperature !== undefined
-    ) {
-      params.temperature = cfg.defaultParams.temperature;
-    }
-    this.client = new ChatOpenAI(
-      params as { model: string; temperature?: number },
-    );
+    this.modelName = cfg.modelName;
+    this.temperature = cfg.supports.temperature
+      ? cfg.defaultParams?.temperature
+      : undefined;
   }
 
-  async stream(prompt: string): Promise<AsyncIterable<unknown>> {
-    return (await this.client.stream(prompt)) as AsyncIterable<unknown>;
+  async stream(prompt: string) {
+    return streamText({
+      model: openai(this.modelName),
+      prompt,
+      temperature: this.temperature,
+    });
   }
 }
