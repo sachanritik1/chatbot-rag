@@ -28,6 +28,14 @@ export class SupabaseConversationsRepository
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+
+    if (res.error) {
+      console.error("Error fetching conversations:", res.error);
+    }
+    console.log(
+      `Fetched ${res.data?.length || 0} conversations for user ${userId}`,
+    );
+
     return (res.data ?? []) as Conversation[];
   }
 
@@ -74,7 +82,10 @@ export class SupabaseConversationsRepository
 
     // Verify ownership
     const parentOwned = await this.verifyOwnership(userId, parentConversationId);
-    if (!parentOwned) return null;
+    if (!parentOwned) {
+      console.error("Parent conversation not owned by user");
+      return null;
+    }
 
     // Create new conversation
     const res = await supabase
@@ -91,11 +102,25 @@ export class SupabaseConversationsRepository
       .select("id")
       .single();
 
-    if (res.error || !res.data) return null;
+    if (res.error) {
+      console.error("Error creating conversation:", res.error);
+      return null;
+    }
+    if (!res.data) {
+      console.error("No data returned from conversation creation");
+      return null;
+    }
 
     const newConversationId = res.data.id;
+    console.log("New conversation created:", newConversationId);
 
     // Copy messages up to branch point
+    console.log("Copying messages:", {
+      source_conv_id: parentConversationId,
+      target_conv_id: newConversationId,
+      until_message_id: parentMessageId,
+    });
+
     const copyRes = await supabase.rpc("copy_messages_until", {
       source_conv_id: parentConversationId,
       target_conv_id: newConversationId,
@@ -103,10 +128,13 @@ export class SupabaseConversationsRepository
     });
 
     if (copyRes.error) {
+      console.error("Error copying messages:", copyRes.error);
+      console.error("Full error details:", JSON.stringify(copyRes.error));
       await this.deleteById(newConversationId);
       return null;
     }
 
+    console.log("Messages copied successfully");
     return { id: newConversationId };
   }
 

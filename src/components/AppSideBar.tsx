@@ -94,8 +94,7 @@ export default async function AppSideBar() {
 }
 
 interface ConversationsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  conversationsPromise: Promise<PostgrestSingleResponse<any[]>>;
+  conversationsPromise: Promise<PostgrestSingleResponse<Conversation[]>>;
 }
 
 export async function Conversations({
