@@ -29,7 +29,18 @@ export default function ChatPage({
       role: msg.role,
       content: msg.content,
       timestamp: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+      model: msg.model,
     })) || [];
+
+  const lastWithModel = [...(prevMessages || [])]
+    .reverse()
+    .find(
+      (m) =>
+        typeof m.model === "string" &&
+        (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model as string),
+    );
+  const initialModel =
+    (lastWithModel?.model as ModelId | undefined) || undefined;
 
   // Use our custom hook for chat functionality
   const {
@@ -41,17 +52,10 @@ export default function ChatPage({
     isLoadingMore,
     hasMore,
     conversationId,
-  } = useChatHandler(initialMessages, initialHasMore);
-
-  const lastWithModel = [...(prevMessages || [])]
-    .reverse()
-    .find(
-      (m) =>
-        typeof m.model === "string" &&
-        (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model as string),
-    );
-  const initialModel =
-    (lastWithModel?.model as ModelId | undefined) || undefined;
+    handleRetry,
+    handleEdit,
+    currentModel,
+  } = useChatHandler(initialMessages, initialHasMore, initialModel);
 
   return (
     <Card className="size-full max-h-[calc(100%-2.5rem)] pt-0">
@@ -74,6 +78,8 @@ export default function ChatPage({
           loadingMessage={loadingMessage}
           shouldAutoScroll={!isLoadingMore}
           conversationId={conversationId}
+          onRetry={handleRetry}
+          onEdit={handleEdit}
         />
       </CardContent>
 
@@ -81,7 +87,7 @@ export default function ChatPage({
         <ChatInputForm
           onSubmit={handleSendMessage}
           isLoading={isLoading}
-          initialModel={initialModel}
+          initialModel={currentModel}
         />
       </CardFooter>
     </Card>

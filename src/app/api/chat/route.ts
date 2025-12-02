@@ -22,10 +22,12 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
+    const modelValue = formData.get("model");
     const data = {
       query: formData.get("query"),
       conversationId: formData.get("conversationId") ?? undefined,
-      model: formData.get("model") ?? undefined,
+      // Convert empty string to undefined so default can be applied
+      model: modelValue && modelValue !== "" ? modelValue : undefined,
     } as Record<string, unknown>;
 
     const parseResult = schema.safeParse(data);

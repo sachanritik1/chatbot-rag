@@ -12,12 +12,16 @@ export type Message = {
   model?: string | null;
 };
 
+import type { ModelId } from "@/config/models";
+
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
   loadingMessage?: string;
   shouldAutoScroll?: boolean;
   conversationId?: string;
+  onRetry?: (messageIndex: number, model: ModelId) => void;
+  onEdit?: (messageIndex: number, content: string, model: ModelId) => void;
 }
 
 export function MessageList({
@@ -26,7 +30,11 @@ export function MessageList({
   loadingMessage,
   shouldAutoScroll = true,
   conversationId,
+  onRetry,
+  onEdit,
 }: MessageListProps) {
+  console.log({ messages });
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef<number>(0);
   const prevFirstIdRef = useRef<string | undefined>(undefined);
@@ -196,6 +204,14 @@ export function MessageList({
           isLatest={i === messages.length - 1}
           messageId={msg.id}
           conversationId={conversationId}
+          model={msg.model}
+          onRetry={onRetry ? (model: ModelId) => onRetry(i, model) : undefined}
+          onEdit={
+            msg.role === "user" && onEdit
+              ? (newContent: string, model: ModelId) =>
+                  onEdit(i, newContent, model)
+              : undefined
+          }
         />
       ))}
 

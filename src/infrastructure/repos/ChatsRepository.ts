@@ -3,6 +3,18 @@ import { createClient } from "@/utils/supabase/server";
 import type { ChatHistory } from "@/domain/chat/models";
 
 export class SupabaseChatsRepository implements ChatsRepository {
+  async getById(messageId: string) {
+    const supabase = await createClient();
+    const response = await supabase
+      .from("chats")
+      .select("id, sender, message, created_at, model")
+      .eq("id", messageId)
+      .single();
+
+    if (response.error || !response.data) return null;
+    return response.data as ChatHistory;
+  }
+
   async getRecent(conversationId: string, limit: number) {
     const supabase = await createClient();
     const response = await supabase

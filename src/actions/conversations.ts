@@ -8,10 +8,48 @@ import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { tryCatch } from "@/utils/try-catch";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
-import { createChatLlm, generateTitle } from "@/lib/llm";
+import { generateTitle } from "@/lib/llm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
+const createEmptyConversationSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+});
+
+type CreateEmptyConversationSchemaType = z.infer<
+  typeof createEmptyConversationSchema
+>;
+
+export async function createEmptyConversation(
+  props: CreateEmptyConversationSchemaType,
+) {
+  const parsedData = createEmptyConversationSchema.safeParse(props);
+  if (!parsedData.success) {
+    return { error: parsedData.error.message };
+  }
+  const { title } = parsedData.data;
+
+  const userService = new UserService(new SupabaseUsersRepository());
+  const current = await userService.requireCurrentUser().catch(() => null);
+  const userId = current?.id;
+  if (!userId) {
+    return { error: "Unauthorized" };
+  }
+
+  const conversationService = new ConversationService(
+    new SupabaseConversationsRepository(),
+    new SupabaseChatsRepository(),
+  );
+
+  try {
+    const conversationId = await conversationService.create(userId, title);
+    revalidatePath("/(authorized)/chat", "layout");
+    return { conversationId };
+  } catch {
+    return { error: "Error creating conversation" };
+  }
+}
 
 const createConversationSchema = z.object({
   query: z.string().min(1, "Query is required"),
@@ -36,8 +74,6 @@ export async function createNewConversation(
   if (!userId) {
     redirect("/login");
   }
-
-  const llm = createChatLlm({ model });
 
   const conversationService = new ConversationService(
     new SupabaseConversationsRepository(),
@@ -96,4 +132,47 @@ export async function deleteConversation(props: deleteConversationSchemaType) {
   }
 
   revalidatePath("/(authorized)/chat", "layout");
+}
+
+const updateConversationTitleSchema = z.object({
+  conversationId: z.string().uuid(),
+  query: z.string().min(1),
+});
+
+type UpdateConversationTitleSchemaType = z.infer<
+  typeof updateConversationTitleSchema
+>;
+
+export async function updateConversationTitle(
+  props: UpdateConversationTitleSchemaType,
+) {
+  const parsedData = updateConversationTitleSchema.safeParse(props);
+  if (!parsedData.success) {
+    return { error: parsedData.error.message };
+  }
+  const { conversationId, query } = parsedData.data;
+
+  const userService = new UserService(new SupabaseUsersRepository());
+  const current = await userService.requireCurrentUser().catch(() => null);
+  const userId = current?.id;
+  if (!userId) {
+    return { error: "Unauthorized" };
+  }
+
+  const repo = new SupabaseConversationsRepository();
+
+  // Verify ownership
+  const conversation = await repo.getById(conversationId);
+  if (!conversation || conversation.user_id !== userId) {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    const newTitle = await generateTitle(query);
+    await repo.updateTitle(conversationId, newTitle);
+    revalidatePath("/(authorized)/chat", "layout");
+    return { success: true };
+  } catch {
+    return { error: "Error updating title" };
+  }
 }

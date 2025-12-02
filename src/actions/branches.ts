@@ -7,16 +7,20 @@ import { SupabaseConversationsRepository } from "@/infrastructure/repos/Conversa
 import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { generateTitle } from "@/lib/llm";
-import { ChatService } from "@/domain/chat/ChatService";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
 
 const createBranchSchema = z.object({
   conversationId: z.string().uuid(),
   messageId: z.string().uuid(),
+  selectedModel: z.string().optional(),
 });
 
 export async function createBranch(data: z.infer<typeof createBranchSchema>) {
   let branchId: string | null = null;
+  let isUserMessage = false;
+  let branchMessage: any = null;
+  let conversationId = "";
+  let selectedModel: string | undefined;
 
   try {
     const parsed = createBranchSchema.safeParse(data);
@@ -25,7 +29,9 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
       return { error: parsed.error.message };
     }
 
-    const { conversationId, messageId } = parsed.data;
+    conversationId = parsed.data.conversationId;
+    const { messageId } = parsed.data;
+    selectedModel = parsed.data.selectedModel;
 
     const userService = new UserService(new SupabaseUsersRepository());
     const chatsRepository = new SupabaseChatsRepository();
@@ -38,6 +44,10 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
       // ✅ DO NOT CATCH redirects
       redirect("/login");
     }
+
+    // Check if the message we're branching from is a user message
+    branchMessage = await chatsRepository.getById(messageId);
+    isUserMessage = branchMessage?.sender === "user";
 
     const repo = new SupabaseConversationsRepository();
     const original = await repo.getById(conversationId);
@@ -94,5 +104,22 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
   }
 
   // ✅ MUST BE OUTSIDE TRY/CATCH
+  // If branching from a user message, we need to regenerate the response
+  if (isUserMessage && branchMessage) {
+    // Use the selected model, or fall back to the original conversation's model
+    let modelToUse = selectedModel;
+    if (!modelToUse) {
+      const chatsRepository = new SupabaseChatsRepository();
+      const recentChats = await chatsRepository.getRecent(conversationId, 10);
+      const lastBotMessage = recentChats.data.find((c) => c.sender === "assistant");
+      modelToUse = lastBotMessage?.model || "gpt-4o";
+    }
+
+    // Redirect with regenerate flag and selected model
+    redirect(
+      `/chat/${branchId}?regenerate=true&model=${encodeURIComponent(modelToUse)}`,
+    );
+  }
+
   redirect(`/chat/${branchId}`);
 }

@@ -19,6 +19,15 @@ export class SupabaseConversationsRepository
     return { id: res.data.id };
   }
 
+  async updateTitle(conversationId: string, title: string): Promise<boolean> {
+    const supabase = await createClient();
+    const res = await supabase
+      .from("conversations")
+      .update({ title })
+      .eq("id", conversationId);
+    return !res.error;
+  }
+
   async listByUserId(userId: string): Promise<Conversation[]> {
     const supabase = await createClient();
     const res = await supabase
