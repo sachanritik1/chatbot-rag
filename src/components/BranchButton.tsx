@@ -27,7 +27,7 @@ export function BranchButton({
   const handleBranch = async () => {
     setIsLoading(true);
     try {
-      const result = await createBranch({ conversationId, messageId });
+      await createBranch({ conversationId, messageId });
     } catch (error) {
       console.error("Error creating branch:", error);
     } finally {

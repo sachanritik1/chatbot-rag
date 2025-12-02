@@ -8,6 +8,7 @@ import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { generateTitle } from "@/lib/llm";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { ChatHistory } from "@/domain/chat/models";
 
 const createBranchSchema = z.object({
   conversationId: z.string().uuid(),
@@ -18,7 +19,7 @@ const createBranchSchema = z.object({
 export async function createBranch(data: z.infer<typeof createBranchSchema>) {
   let branchId: string | null = null;
   let isUserMessage = false;
-  let branchMessage: any = null;
+  let branchMessage: ChatHistory | null = null;
   let conversationId = "";
   let selectedModel: string | undefined;
 
@@ -111,7 +112,9 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
     if (!modelToUse) {
       const chatsRepository = new SupabaseChatsRepository();
       const recentChats = await chatsRepository.getRecent(conversationId, 10);
-      const lastBotMessage = recentChats.data.find((c) => c.sender === "assistant");
+      const lastBotMessage = recentChats.data.find(
+        (c) => c.sender === "assistant",
+      );
       modelToUse = lastBotMessage?.model || "gpt-4o";
     }
 
