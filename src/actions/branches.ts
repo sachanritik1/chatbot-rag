@@ -6,11 +6,13 @@ import { revalidatePath } from "next/cache";
 import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
 import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { generateTitle } from "@/lib/llm";
+import { ChatService } from "@/domain/chat/ChatService";
+import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
 
 const createBranchSchema = z.object({
   conversationId: z.string().uuid(),
   messageId: z.string().uuid(),
-  title: z.string().optional(),
 });
 
 export async function createBranch(data: z.infer<typeof createBranchSchema>) {
@@ -23,9 +25,10 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
       return { error: parsed.error.message };
     }
 
-    const { conversationId, messageId, title } = parsed.data;
+    const { conversationId, messageId } = parsed.data;
 
     const userService = new UserService(new SupabaseUsersRepository());
+    const chatsRepository = new SupabaseChatsRepository();
     const user = await userService.requireCurrentUser().catch((err) => {
       console.error("User auth error:", err);
       return null;
@@ -44,7 +47,16 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
       return { error: "Conversation not found" };
     }
 
-    const branchTitle = title || `${original.title} (Branch)`;
+    let branchTitle = original.title.trim();
+
+    if (!branchTitle) {
+      // generate a new title if original has none
+      const chats = await chatsRepository.getRecent(conversationId, 4);
+      branchTitle = await generateTitle(
+        chats.data.map((c) => c.sender + ":" + c.message).join(" \n "),
+      );
+    }
+
     const existingBranches = await repo.getBranches(conversationId);
     const branchLabel = `Branch ${existingBranches.length + 1}`;
 

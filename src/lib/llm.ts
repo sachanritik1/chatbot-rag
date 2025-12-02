@@ -28,3 +28,12 @@ export function createChatLlm({ model }: LlmFactoryParams = {}) {
     },
   };
 }
+
+export async function generateTitle(query: string) {
+  const llm = createChatLlm({ model: "gpt-4o-mini" });
+  const conversationTitlePrompt = `
+          Generate a title for a new conversation based on the following question in 4 to 5 words only: "${query}"
+        `;
+  const { text } = await llm.invoke(conversationTitlePrompt);
+  return text;
+}

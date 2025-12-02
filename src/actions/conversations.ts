@@ -8,7 +8,7 @@ import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { tryCatch } from "@/utils/try-catch";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
-import { createChatLlm } from "@/lib/llm";
+import { createChatLlm, generateTitle } from "@/lib/llm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -39,17 +39,17 @@ export async function createNewConversation(
 
   const llm = createChatLlm({ model });
 
-  const conversationTitlePrompt = `
-          Generate a title for a new conversation based on the following question in 4 to 5 words only: "${query}"
-        `;
-  const { text } = await llm.invoke(conversationTitlePrompt);
   const conversationService = new ConversationService(
     new SupabaseConversationsRepository(),
     new SupabaseChatsRepository(),
   );
   let conversationId: string;
   try {
-    conversationId = await conversationService.create(userId, text);
+    const conversationTitle = await generateTitle(query);
+    conversationId = await conversationService.create(
+      userId,
+      conversationTitle,
+    );
   } catch {
     return "Error creating conversation";
   }
