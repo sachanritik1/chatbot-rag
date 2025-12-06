@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
  * Generic debounce hook
  * Returns a debounced version of the callback that delays invoking until after wait milliseconds have elapsed
  */
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
