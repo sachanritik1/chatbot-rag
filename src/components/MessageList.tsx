@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useLayoutEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { Bot } from "lucide-react";
 
@@ -33,142 +33,19 @@ export function MessageList({
   onRetry,
   onEdit,
 }: MessageListProps) {
-  console.log({ messages });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const prevLenRef = useRef<number>(0);
-  const prevFirstIdRef = useRef<string | undefined>(undefined);
-  const prevLastIdRef = useRef<string | undefined>(undefined);
-  const prevLastContentLenRef = useRef<number>(0);
-
-  // Track scroll container and its previous height for preserving position on prepend
-  const scrollContainerRef = useRef<HTMLElement | null>(null);
-  const prevScrollHeightRef = useRef<number>(0);
-  const hasInitializedScrollRef = useRef<boolean>(false);
-
-  function findNearestScrollContainer(): HTMLElement | null {
-    let node: HTMLElement | null = chatEndRef.current as HTMLElement | null;
-    while (node && node.parentElement) {
-      node = node.parentElement as HTMLElement;
-      const style = window.getComputedStyle(node);
-      const isScrollableY =
-        style.overflowY === "auto" || style.overflowY === "scroll";
-      const canScroll = node.scrollHeight > node.clientHeight;
-      if (isScrollableY || canScroll) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  function scrollToBottomInstant(container: HTMLElement | null) {
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-    } else {
-      chatEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-    }
-  }
-
-  // Initialize scroll container reference and baseline height
-  useLayoutEffect(() => {
-    if (!scrollContainerRef.current) {
-      scrollContainerRef.current = findNearestScrollContainer();
-    }
-    const container = scrollContainerRef.current;
-    if (container) {
-      prevScrollHeightRef.current = container.scrollHeight;
-    }
-
-    // On first mount, ensure we are at the bottom after layout
-    if (!hasInitializedScrollRef.current) {
-      hasInitializedScrollRef.current = true;
-      const rafId = requestAnimationFrame(() => {
-        // Prefer bottom on first mount regardless of initial message count
-        scrollToBottomInstant(
-          scrollContainerRef.current || findNearestScrollContainer(),
-        );
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (shouldAutoScroll && messagesEndRef.current) {
+      // Use instant scroll during loading/streaming for smoother UX
+      // Use smooth scroll when not loading for better visual feedback
+      messagesEndRef.current.scrollIntoView({
+        behavior: isLoading ? "instant" : "smooth",
+        block: "end"
       });
-      return () => cancelAnimationFrame(rafId);
     }
-  }, []);
-
-  useLayoutEffect(() => {
-    const firstId = messages[0]?.id;
-    const last = messages[messages.length - 1];
-    const lastId = last?.id;
-    const lastContentLen = (last?.content?.length ?? 0) as number;
-
-    const hasAppendedByIdChange =
-      lastId !== undefined &&
-      prevLastIdRef.current !== undefined &&
-      lastId !== prevLastIdRef.current;
-
-    const hasPrepended =
-      firstId !== undefined &&
-      prevFirstIdRef.current !== undefined &&
-      firstId !== prevFirstIdRef.current &&
-      messages.length > prevLenRef.current;
-
-    const streamingUpdateToLast =
-      messages.length === prevLenRef.current &&
-      lastContentLen > prevLastContentLenRef.current;
-
-    // Detect append even when last message has no id (e.g., local user message)
-    const hasAppendedByLength =
-      messages.length > prevLenRef.current && !hasPrepended;
-
-    const shouldScrollForAppend = hasAppendedByIdChange || hasAppendedByLength;
-
-    const container =
-      scrollContainerRef.current || findNearestScrollContainer();
-    if (container && !scrollContainerRef.current) {
-      scrollContainerRef.current = container;
-    }
-
-    // When messages appear initially, jump to bottom
-    if (
-      container &&
-      prevLenRef.current === 0 &&
-      messages.length > 0 &&
-      shouldAutoScroll
-    ) {
-      scrollToBottomInstant(container);
-    }
-
-    if (container) {
-      // Preserve position when older messages are prepended
-      if (hasPrepended) {
-        const prevHeight =
-          prevScrollHeightRef.current || container.scrollHeight;
-        const newHeight = container.scrollHeight;
-        const delta = newHeight - prevHeight;
-        if (delta > 0) {
-          container.scrollTop += delta;
-        }
-      } else if (
-        shouldAutoScroll &&
-        (shouldScrollForAppend || streamingUpdateToLast)
-      ) {
-        // Scroll to bottom on append (by id or length) or streaming updates
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-
-      // Update previous height after handling
-      prevScrollHeightRef.current = container.scrollHeight;
-    } else if (
-      shouldAutoScroll &&
-      (shouldScrollForAppend || streamingUpdateToLast)
-    ) {
-      // Fallback if container not yet found
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-
-    // update refs after decision
-    prevLenRef.current = messages.length;
-    prevFirstIdRef.current = firstId;
-    prevLastIdRef.current = lastId;
-    prevLastContentLenRef.current = lastContentLen;
-  }, [messages, shouldAutoScroll]);
+  }, [messages, shouldAutoScroll, isLoading]);
 
   if (messages.length === 0 && !isLoading) {
     return (
@@ -235,7 +112,7 @@ export function MessageList({
         </div>
       )}
 
-      <div ref={chatEndRef} />
+      <div ref={messagesEndRef} />
     </div>
   );
 }
