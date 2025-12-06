@@ -12,6 +12,10 @@ type Props = {
   params: Promise<{
     conversationId: string;
   }>;
+  searchParams: Promise<{
+    regenerate?: string;
+    model?: string;
+  }>;
 };
 
 // Dynamic metadata based on conversationId
@@ -37,8 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const Page = async ({ params }: Props) => {
+const Page = async ({ params, searchParams }: Props) => {
   const { conversationId } = await params;
+  const { regenerate, model } = await searchParams;
   const convService = new ConversationService(
     new SupabaseConversationsRepository(),
     new SupabaseChatsRepository(),
@@ -61,7 +66,12 @@ const Page = async ({ params }: Props) => {
   return (
     <>
       <ChatHeader title={conversation.title} />
-      <ChatPage prevMessages={messages} initialHasMore={initialHasMore} />
+      <ChatPage
+        prevMessages={messages}
+        initialHasMore={initialHasMore}
+        shouldRegenerate={regenerate === "true"}
+        regenerateModel={model}
+      />
     </>
   );
 };

@@ -8,6 +8,7 @@ import { MessageList, Message } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
 import { createEmptyConversation } from "@/actions/conversations";
+import { deleteMessagesAfter } from "@/actions/chats";
 
 type ChatPageProps = {
   title?: string;
@@ -19,10 +20,14 @@ type ChatPageProps = {
     model?: string | null;
   }[];
   initialHasMore?: boolean;
+  shouldRegenerate?: boolean;
+  regenerateModel?: string;
 };
 
 export default function ChatPage({
   prevMessages,
+  shouldRegenerate,
+  regenerateModel,
 }: ChatPageProps) {
   const params = useParams();
   const router = useRouter();
@@ -47,6 +52,7 @@ export default function ChatPage({
 
   // Only convert prevMessages once on mount, then let useChat manage all messages
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasTriggeredRegenerate, setHasTriggeredRegenerate] = useState(false);
 
   // Initialize useChat with prevMessages on mount
   if (!isInitialized && prevMessages && prevMessages.length > 0 && messages.length === 0) {
@@ -58,6 +64,36 @@ export default function ChatPage({
     }));
     setMessages(initialUIMessages);
     setIsInitialized(true);
+  }
+
+  // Handle regeneration after initialization
+  if (
+    isInitialized &&
+    !hasTriggeredRegenerate &&
+    shouldRegenerate &&
+    conversationId &&
+    prevMessages &&
+    prevMessages.length > 0
+  ) {
+    const lastUserMsg = [...prevMessages].reverse().find((m) => m.role === "user");
+    if (lastUserMsg) {
+      const modelToUse = (regenerateModel as ModelId) || currentModel;
+      setCurrentModel(modelToUse);
+      setHasTriggeredRegenerate(true);
+
+      // Use setTimeout to ensure state updates have completed
+      setTimeout(() => {
+        sendMessage(
+          { text: lastUserMsg.content },
+          {
+            body: {
+              conversationId,
+              model: modelToUse,
+            },
+          },
+        );
+      }, 0);
+    }
   }
 
   // Convert useChat UIMessages to our Message format for display
@@ -109,20 +145,85 @@ export default function ChatPage({
     );
   };
 
-  const handleRetry = async (_messageIndex: number, model: ModelId) => {
+  const handleRetry = async (messageIndex: number, model: ModelId) => {
+    if (!conversationId) return;
+
     setCurrentModel(model);
-    // TODO: Implement retry with useChat
-    console.log("Retry not yet implemented with useChat");
+
+    // Find the last user message before this index
+    const userMessages = messages.slice(0, messageIndex + 1).filter(m => m.role === "user");
+    const lastUserMessage = userMessages[userMessages.length - 1];
+
+    if (!lastUserMessage) return;
+
+    const textPart = lastUserMessage.parts.find((p) => p.type === "text");
+    const messageText = textPart && "text" in textPart ? textPart.text : "";
+
+    if (!messageText) return;
+
+    // Get the message before the one we're retrying (to delete everything after it)
+    const messageBeforeIndex = messageIndex - 1;
+    if (messageBeforeIndex >= 0) {
+      const messageBeforeId = allMessages[messageBeforeIndex]?.id;
+      if (messageBeforeId) {
+        // Delete messages from DB after this point
+        await deleteMessagesAfter({
+          conversationId,
+          messageId: messageBeforeId,
+        });
+      }
+    }
+
+    // Remove all messages after and including the current one from UI
+    setMessages(messages.slice(0, messageIndex));
+
+    // Resend the last user message with the new model
+    sendMessage(
+      { text: messageText },
+      {
+        body: {
+          conversationId,
+          model,
+        },
+      },
+    );
   };
 
   const handleEdit = async (
-    _messageIndex: number,
-    _content: string,
+    messageIndex: number,
+    content: string,
     model: ModelId,
   ) => {
+    if (!conversationId) return;
+
     setCurrentModel(model);
-    // TODO: Implement edit with useChat
-    console.log("Edit not yet implemented with useChat");
+
+    // Get the message before the one we're editing (to delete everything after it)
+    const messageBeforeIndex = messageIndex - 1;
+    if (messageBeforeIndex >= 0) {
+      const messageBeforeId = allMessages[messageBeforeIndex]?.id;
+      if (messageBeforeId) {
+        // Delete messages from DB after this point
+        await deleteMessagesAfter({
+          conversationId,
+          messageId: messageBeforeId,
+        });
+      }
+    }
+
+    // Remove all messages after and including the current one from UI
+    setMessages(messages.slice(0, messageIndex));
+
+    // Send the edited message
+    sendMessage(
+      { text: content },
+      {
+        body: {
+          conversationId,
+          model,
+        },
+      },
+    );
   };
 
   return (

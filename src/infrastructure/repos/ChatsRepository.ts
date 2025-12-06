@@ -94,4 +94,36 @@ export class SupabaseChatsRepository implements ChatsRepository {
     const nextPage = Math.min(totalPages, Math.floor((index + 1) / limit) + 1);
     return { data, nextPage, totalPages, totalCount };
   }
+
+  async deleteAfterMessage(conversationId: string, messageId: string) {
+    const supabase = await createClient();
+
+    // Get the timestamp of the message we're keeping
+    const message = await supabase
+      .from("chats")
+      .select("created_at")
+      .eq("id", messageId)
+      .eq("conversation_id", conversationId)
+      .single();
+
+    if (message.error || !message.data) {
+      return { error: "Message not found" };
+    }
+
+    // Delete all messages with created_at > message.created_at
+    // OR (created_at = message.created_at AND id > messageId)
+    const { error } = await supabase
+      .from("chats")
+      .delete()
+      .eq("conversation_id", conversationId)
+      .or(
+        `created_at.gt.${message.data.created_at},and(created_at.eq.${message.data.created_at},id.gt.${messageId})`,
+      );
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { success: true };
+  }
 }
