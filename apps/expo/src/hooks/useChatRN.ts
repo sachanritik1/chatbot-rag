@@ -1,8 +1,9 @@
-import { useState } from "react";
 import type { Message } from "@chatbot-rag/shared";
-import { supabase } from "../lib/supabase";
-import { API_BASE_URL } from "../config/api";
+import { useState } from "react";
 import { fetch as streamingFetch } from "react-native-fetch-api";
+
+import { API_BASE_URL } from "../config/api";
+import { supabase } from "../lib/supabase";
 
 interface UseChatRNOptions {
   conversationId?: string;
@@ -17,7 +18,7 @@ export function useChatRN({
 }: UseChatRNOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "streaming">(
-    "idle"
+    "idle",
   );
 
   const sendMessage = async (content: string, model: string) => {
@@ -86,7 +87,6 @@ export function useChatRN({
       let assistantMessage = "";
       const assistantMsgId = (Date.now() + 1).toString();
 
-      let eventCount = 0;
       for (const line of lines) {
         if (!line.trim()) continue;
 
@@ -94,13 +94,16 @@ export function useChatRN({
         if (line.startsWith("data: ")) {
           const jsonStr = line.slice(6); // Remove "data: " prefix
           try {
-            const parsed = JSON.parse(jsonStr);
+            const parsed = JSON.parse(jsonStr) as {
+              type?: string;
+              delta?: string;
+            };
 
             // Handle different event types
             if (parsed.type === "text-delta" && parsed.delta) {
               assistantMessage += parsed.delta;
             }
-          } catch (e) {
+          } catch {
             // Ignore parse errors for non-JSON lines
           }
         }
@@ -121,7 +124,7 @@ export function useChatRN({
 
       console.log(
         "✅ Message completed. Final length:",
-        assistantMessage.length
+        assistantMessage.length,
       );
 
       const finalMessage: Message = {

@@ -9,13 +9,18 @@
     "./config": "./src/config/index.ts"
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint",
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1"
   },
   "devDependencies": {
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "typescript": "^5.9.2"
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+
 import { supabase } from "../lib/supabase";
 
 export default function Index() {
@@ -8,8 +9,8 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    void checkAuth();
+  }, [checkAuth]);
 
   async function checkAuth() {
     try {
