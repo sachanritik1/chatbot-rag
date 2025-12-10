@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -8,28 +8,31 @@ export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  const checkAuth = useCallback(
+    async function () {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          router.replace("/(app)/conversations");
+        } else {
+          router.replace("/(auth)/login");
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.replace("/(auth)/login");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router],
+  );
+
   useEffect(() => {
     void checkAuth();
   }, [checkAuth]);
-
-  async function checkAuth() {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) {
-        router.replace("/(app)/conversations");
-      } else {
-        router.replace("/(auth)/login");
-      }
-    } catch (error) {
-      console.error("Error checking auth:", error);
-      router.replace("/(auth)/login");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   if (loading) {
     return (

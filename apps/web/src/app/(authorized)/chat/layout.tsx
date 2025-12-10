@@ -15,7 +15,7 @@ export default async function AuthLayout({
   return (
     <SidebarProvider>
       <AppSideBar />
-      <main className="h-[100svh] w-screen flex-1 space-y-2 p-4 sm:h-screen">
+      <main className="h-svh w-screen flex-1 space-y-2 p-4 sm:h-screen">
         {/* Title will be passed by each page via props on ChatHeader inside page components */}
         {children}
       </main>

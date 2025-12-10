@@ -1,25 +1,27 @@
-import { useEffect, useState, useRef } from "react";
+import type { ModelId } from "@chatbot-rag/shared";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+
 import { useChatRN } from "../../hooks/useChatRN";
 import { supabase } from "../../lib/supabase";
-import type { ModelId } from "@chatbot-rag/shared";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  timestamp?: Date;
 }
 
 export default function Chat() {
@@ -63,39 +65,43 @@ export default function Chat() {
 
   // Load messages from database on mount
   useEffect(() => {
+    async function loadMessages() {
+      if (!conversationId) return;
+
+      setInitialLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("chats")
+          .select("*")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        // Convert DB messages to display format
+        const displayMessages: Message[] = data.map((chat) => ({
+          id: chat.id,
+          role:
+            chat.sender === "user" ? ("user" as const) : ("assistant" as const),
+          content: chat.message,
+          timestamp: new Date(chat?.created_at),
+        }));
+
+        setMessages(displayMessages);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          Alert.alert("Error", error.message);
+        }
+        console.error("Error loading messages:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    }
+
     if (conversationId && authToken) {
       loadMessages();
     }
-  }, [conversationId, authToken]);
-
-  async function loadMessages() {
-    if (!conversationId) return;
-
-    setInitialLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("chats")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      // Convert DB messages to display format
-      const displayMessages: Message[] = (data || []).map((chat) => ({
-        id: chat.id,
-        role:
-          chat.sender === "user" ? ("user" as const) : ("assistant" as const),
-        content: chat.message,
-      }));
-
-      setMessages(displayMessages);
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setInitialLoading(false);
-    }
-  }
+  }, [conversationId, authToken, setMessages]);
 
   async function handleSendMessage() {
     if (!inputText.trim() || !authToken) return;

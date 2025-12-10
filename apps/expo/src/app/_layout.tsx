@@ -1,16 +1,13 @@
-import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
+import { Stack } from "expo-router";
+
+import { supabase } from "../lib/supabase";
 
 export default function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [_, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
