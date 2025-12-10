@@ -1,5 +1,5 @@
 {
-  "name": "@acme/expo",
+  "name": "@chatbot-rag/expo",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -14,13 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/expo": "catalog:",
     "@legendapp/list": "^2.0.14",
-    "@tanstack/react-query": "catalog:",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
-    "@trpc/tanstack-react-query": "catalog:",
-    "better-auth": "catalog:",
     "expo": "~54.0.20",
     "expo-constants": "~18.0.10",
     "expo-dev-client": "~6.0.16",
@@ -41,7 +35,13 @@
     "react-native-safe-area-context": "~5.6.1",
     "react-native-screens": "~4.16.0",
     "react-native-worklets": "~0.5.1",
-    "superjson": "2.2.3"
+    "superjson": "2.2.3",
+    "@chatbot-rag/shared": "workspace:*",
+    "@chatbot-rag/config": "workspace:*",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.87.1",
+    "react-native-fetch-api": "^3.0.0",
+    "react-native-url-polyfill": "^3.0.0"
   },
   "devDependencies": {
     "@acme/api": "workspace:*",
