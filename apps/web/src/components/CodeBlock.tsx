@@ -10,8 +10,8 @@ interface CodeBlockProps {
 export function CodeBlock({ language, value }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
-  const onCopy = () => {
-    navigator.clipboard.writeText(value);
+  const onCopy = async () => {
+    await navigator.clipboard.writeText(value);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

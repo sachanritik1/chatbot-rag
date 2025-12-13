@@ -8,6 +8,7 @@ import { MessageActions } from "./MessageActions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+import { DEFAULT_MODEL_ID } from "@/config/models";
 import type { ModelId } from "@/config/models";
 
 interface ChatMessageProps {
@@ -17,7 +18,7 @@ interface ChatMessageProps {
   isLatest?: boolean;
   messageId?: string;
   conversationId?: string;
-  model?: string | null;
+  model?: ModelId;
   onRetry?: (model: ModelId) => void;
   onEdit?: (newContent: string, model: ModelId) => void;
 }
@@ -50,7 +51,7 @@ export function ChatMessage({
   const handleSave = () => {
     if (onEdit && editedContent.trim() && editedContent !== content) {
       // Use the model from the message, or default to gpt-4o
-      const validModel = (model as ModelId) || "gpt-4o";
+      const validModel = model ?? DEFAULT_MODEL_ID;
       onEdit(editedContent, validModel);
     }
     setIsEditing(false);
@@ -134,9 +135,14 @@ export function ChatMessage({
                   components={{
                     code(props) {
                       const { children, className, ...rest } = props;
-                      const match = /language-(\w+)/.exec(className || "");
+                      const match = /language-(\w+)/.exec(className ?? "");
 
-                      if (match && children && typeof children === "string") {
+                      if (
+                        match &&
+                        children &&
+                        typeof children === "string" &&
+                        match[1]
+                      ) {
                         return (
                           <CodeBlock
                             key={Math.random()}

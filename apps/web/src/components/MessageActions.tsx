@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Copy,
-  RefreshCw,
-  Edit,
-  GitBranch,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { Copy, RefreshCw, Edit, GitBranch, Check, Loader2 } from "lucide-react";
 import { createBranch } from "@/actions/branches";
 import {
   Tooltip,
@@ -17,15 +10,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DEFAULT_MODEL_ID  } from "@/config/models";
-import type {ModelId} from "@/config/models";
+import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
+import type { ModelId } from "@/config/models";
 
 interface MessageActionsProps {
   role: "user" | "bot";
   content: string;
   messageId?: string;
   conversationId?: string;
-  currentModel?: string | null;
+  currentModel?: ModelId;
   onRetry?: (model: ModelId) => void;
   onEdit?: (model: ModelId) => void;
 }
@@ -42,9 +35,11 @@ export function MessageActions({
   const [isCopied, setIsCopied] = useState(false);
   const [isBranching, setIsBranching] = useState(false);
   const [showModelSelect, setShowModelSelect] = useState(false);
-  const [actionType, setActionType] = useState<"retry" | "edit" | "branch" | null>(null);
+  const [actionType, setActionType] = useState<
+    "retry" | "edit" | "branch" | null
+  >(null);
   const [selectedModel, setSelectedModel] = useState<ModelId>(
-    (currentModel as ModelId) || DEFAULT_MODEL_ID,
+    currentModel ?? DEFAULT_MODEL_ID,
   );
 
   const handleCopy = async () => {
@@ -95,19 +90,22 @@ export function MessageActions({
 
   if (showModelSelect) {
     return (
-      <div className="flex items-center gap-2 bg-white dark:bg-zinc-800 p-2 rounded-md shadow-lg border border-gray-200 dark:border-zinc-700">
+      <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
         <select
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value as ModelId)}
-          className="text-xs px-2 py-1 border rounded bg-white dark:bg-zinc-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-zinc-600"
+          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-gray-100"
         >
-          <option value="gpt-4o">GPT-4o</option>
-          <option value="gpt-4o-mini">GPT-4o Mini</option>
+          {ALLOWED_MODEL_IDS.map((modelId) => (
+            <option key={modelId} value={modelId}>
+              {modelId}
+            </option>
+          ))}
         </select>
         <Button
           size="sm"
           onClick={executeAction}
-          className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700"
+          className="h-6 bg-blue-600 px-2 text-xs hover:bg-blue-700"
         >
           Go
         </Button>

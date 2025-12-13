@@ -1,18 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Message } from "@/components/MessageList";
 import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
-import {
-  ALLOWED_MODEL_IDS,
-  DEFAULT_MODEL_ID
-  
-} from "@/config/models";
-import type {ModelId} from "@/config/models";
+import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
+import type { ModelId } from "@/config/models";
 import { createEmptyConversation } from "@/actions/conversations";
 import { deleteMessagesAfter } from "@/actions/chats";
 
@@ -27,7 +23,7 @@ interface ChatPageProps {
   }[];
   initialHasMore?: boolean;
   shouldRegenerate?: boolean;
-  regenerateModel?: string;
+  regenerateModel?: ModelId;
 }
 
 export default function ChatPage({
@@ -40,7 +36,7 @@ export default function ChatPage({
   const conversationId = params.conversationId as string | undefined;
 
   // Get initial model from last message with a valid model
-  const lastWithModel = [...(prevMessages || [])]
+  const lastWithModel = [...(prevMessages ?? [])]
     .reverse()
     .find(
       (m) =>
@@ -48,7 +44,7 @@ export default function ChatPage({
         (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model),
     );
   const initialModel =
-    (lastWithModel?.model as ModelId | undefined) || DEFAULT_MODEL_ID;
+    (lastWithModel?.model as ModelId | undefined) ?? DEFAULT_MODEL_ID;
 
   const [currentModel, setCurrentModel] = useState<ModelId>(initialModel);
 
@@ -68,7 +64,7 @@ export default function ChatPage({
     messages.length === 0
   ) {
     const initialUIMessages = prevMessages.map((msg) => ({
-      id: msg.id || crypto.randomUUID(),
+      id: msg.id ?? crypto.randomUUID(),
       role: msg.role === "bot" ? ("assistant" as const) : ("user" as const),
       parts: [{ type: "text" as const, text: msg.content }],
       status: "ready" as const,
@@ -78,39 +74,54 @@ export default function ChatPage({
   }
 
   // Handle regeneration after initialization
-  if (
-    isInitialized &&
-    !hasTriggeredRegenerate &&
-    shouldRegenerate &&
-    conversationId &&
-    prevMessages &&
-    prevMessages.length > 0
-  ) {
-    const lastUserMsg = [...prevMessages]
-      .reverse()
-      .find((m) => m.role === "user");
-    if (lastUserMsg) {
-      const modelToUse = (regenerateModel as ModelId) || currentModel;
-      setCurrentModel(modelToUse);
-      setHasTriggeredRegenerate(true);
-
-      // Use setTimeout to ensure state updates have completed
-      setTimeout(() => {
-        sendMessage(
-          { text: lastUserMsg.content },
-          {
-            body: {
-              conversationId,
-              model: modelToUse,
-            },
+  useEffect(() => {
+    async function triggerRegeneration(
+      text: string,
+      conversationId: string,
+      model: ModelId,
+    ) {
+      await sendMessage(
+        { text },
+        {
+          body: {
+            conversationId,
+            model,
           },
-        );
-      }, 0);
+        },
+      );
     }
-  }
+
+    if (
+      isInitialized &&
+      !hasTriggeredRegenerate &&
+      shouldRegenerate &&
+      conversationId &&
+      prevMessages &&
+      prevMessages.length > 0
+    ) {
+      const lastUserMsg = [...prevMessages]
+        .reverse()
+        .find((m) => m.role === "user");
+      if (lastUserMsg) {
+        const modelToUse = regenerateModel ?? currentModel;
+        setCurrentModel(modelToUse);
+        setHasTriggeredRegenerate(true);
+        triggerRegeneration(lastUserMsg.content, conversationId, modelToUse);
+      }
+    }
+  }, [
+    conversationId,
+    currentModel,
+    hasTriggeredRegenerate,
+    isInitialized,
+    prevMessages,
+    regenerateModel,
+    sendMessage,
+    shouldRegenerate,
+  ]);
 
   // Convert useChat UIMessages to our Message format for display
-  const allMessages: Message[] = messages.map((msg) => {
+  const allMessages = messages.map((msg) => {
     // Extract text from parts array
     const textPart = msg.parts.find((p) => p.type === "text");
     const content = textPart && "text" in textPart ? textPart.text : "";
@@ -126,10 +137,10 @@ export default function ChatPage({
         ? new Date(originalMsg.createdAt)
         : new Date(),
       model:
-        originalMsg?.model ||
+        originalMsg?.model ??
         (msg.role === "assistant" ? currentModel : undefined),
     };
-  });
+  }) as Message[];
 
   const isLoading = status === "submitted" || status === "streaming";
 
@@ -154,7 +165,7 @@ export default function ChatPage({
     }
 
     // Send message with custom body data
-    sendMessage(
+    await sendMessage(
       { text },
       {
         body: {
@@ -200,7 +211,7 @@ export default function ChatPage({
     setMessages(messages.slice(0, messageIndex));
 
     // Resend the last user message with the new model
-    sendMessage(
+    await sendMessage(
       { text: messageText },
       {
         body: {
@@ -237,7 +248,7 @@ export default function ChatPage({
     setMessages(messages.slice(0, messageIndex));
 
     // Send the edited message
-    sendMessage(
+    await sendMessage(
       { text: content },
       {
         body: {

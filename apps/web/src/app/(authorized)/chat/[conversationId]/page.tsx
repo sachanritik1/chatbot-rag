@@ -5,6 +5,7 @@ import ChatHeader from "@/components/ChatHeader";
 import { ConversationService } from "@/domain/conversations/ConversationService";
 import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import type { ModelId } from "@/config/models";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ interface Props {
   }>;
   searchParams: Promise<{
     regenerate?: string;
-    model?: string;
+    model?: ModelId;
   }>;
 }
 
@@ -25,15 +26,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     new SupabaseConversationsRepository(),
     new SupabaseChatsRepository(),
   );
-  const conv = await convService.getById(conversationId);
-  if (!conv) {
+  const conversation = (await convService.getById(conversationId)) as {
+    title: string;
+  } | null;
+  if (!conversation) {
     return {
       title: "AI Chat App",
       description: "Chat with AI",
     };
   }
-
-  const conversation = conv as { title: string };
 
   return {
     title: `${conversation.title}`,
@@ -48,13 +49,15 @@ const Page = async ({ params, searchParams }: Props) => {
     new SupabaseConversationsRepository(),
     new SupabaseChatsRepository(),
   );
-  const conversation = await convService.getById(conversationId);
+  const conversation = (await convService.getById(conversationId)) as {
+    title: string;
+  } | null;
   if (!conversation) {
     return <ChatPage />;
   }
   const chatsRepo = new SupabaseChatsRepository();
   const recent = await chatsRepo.getRecent(conversationId, 10);
-  const messages = (recent.data || []).slice().map((chat) => ({
+  const messages = recent.data.slice().map((chat) => ({
     id: chat.id,
     role: chat.sender === "assistant" ? ("bot" as const) : ("user" as const),
     content: chat.message,
@@ -62,7 +65,7 @@ const Page = async ({ params, searchParams }: Props) => {
     model: chat.model ?? null,
   }));
   // With a simple newest-first fetch, assume there may be more if we hit the limit
-  const initialHasMore = (recent.data?.length ?? 0) >= 10;
+  const initialHasMore = recent.data.length >= 10;
   return (
     <>
       <ChatHeader title={conversation.title} />

@@ -9,7 +9,7 @@ export interface Message {
   role: "user" | "bot";
   content: string;
   timestamp: Date;
-  model?: string | null;
+  model?: ModelId;
 }
 
 import type { ModelId } from "@/config/models";
@@ -42,7 +42,7 @@ export function MessageList({
       // Use smooth scroll when not loading for better visual feedback
       messagesEndRef.current.scrollIntoView({
         behavior: isLoading ? "instant" : "smooth",
-        block: "end"
+        block: "end",
       });
     }
   }, [messages, shouldAutoScroll, isLoading]);

@@ -8,10 +8,9 @@ import { Loader2, Send } from "lucide-react";
 import {
   MODEL_OPTIONS,
   DEFAULT_MODEL_ID,
-  
-  ALLOWED_MODEL_IDS
+  ALLOWED_MODEL_IDS,
 } from "@/config/models";
-import type {ModelId} from "@/config/models";
+import type { ModelId } from "@/config/models";
 import {
   Select,
   SelectContent,
@@ -33,13 +32,12 @@ export function ChatInputForm({
   initialModel,
 }: ChatInputFormProps) {
   const params = useParams();
-  const conversationId =
-    (params?.conversationId as string | undefined) || undefined;
+  const conversationId = params.conversationId as string | undefined;
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [selectedModel, setSelectedModel] = useState<ModelId>(
-    initialModel || DEFAULT_MODEL_ID,
+    initialModel ?? DEFAULT_MODEL_ID,
   );
 
   useEffect(() => {
@@ -50,14 +48,14 @@ export function ChatInputForm({
         ? `model_for_conversation:${conversationId}`
         : undefined;
 
-      const tryRead = (key?: string  ): string | null =>
-        key ? (window.localStorage.getItem(key)) : null;
+      const tryRead = (key?: string): string | null =>
+        key ? window.localStorage.getItem(key) : null;
 
       const isAllowed = (m: unknown): m is ModelId =>
         typeof m === "string" &&
         (ALLOWED_MODEL_IDS as readonly string[]).includes(m);
 
-      const fromConv = tryRead(CONV_KEY || undefined);
+      const fromConv = tryRead(CONV_KEY ?? undefined);
       if (isAllowed(fromConv)) {
         setSelectedModel(fromConv);
         return;
