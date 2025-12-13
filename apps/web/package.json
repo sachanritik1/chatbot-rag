@@ -46,7 +46,8 @@
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.2.0",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "jiti": "^2.0.14"
   },
   "devDependencies": {
     "@chatbot-rag/eslint-config": "workspace:*",
