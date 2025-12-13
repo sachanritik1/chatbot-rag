@@ -9,6 +9,7 @@ import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository"
 import { generateTitle } from "@/lib/llm";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
 import type { ChatHistory } from "@/domain/chat/models";
+import { DEFAULT_MODEL_ID } from "@/config/models";
 
 const createBranchSchema = z.object({
   conversationId: z.string().uuid(),
@@ -115,7 +116,7 @@ export async function createBranch(data: z.infer<typeof createBranchSchema>) {
       const lastBotMessage = recentChats.data.find(
         (c) => c.sender === "assistant",
       );
-      modelToUse = lastBotMessage?.model || "gpt-4o";
+      modelToUse = lastBotMessage?.model ?? DEFAULT_MODEL_ID;
     }
 
     // Redirect with regenerate flag and selected model

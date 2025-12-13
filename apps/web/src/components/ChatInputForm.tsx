@@ -57,6 +57,7 @@ export function ChatInputForm({
 
       const fromConv = tryRead(CONV_KEY ?? undefined);
       if (isAllowed(fromConv)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedModel(fromConv);
         return;
       }
@@ -66,7 +67,10 @@ export function ChatInputForm({
         return;
       }
       setSelectedModel(DEFAULT_MODEL_ID);
-    } catch {}
+    } catch {
+      // Ignore errors reading from localStorage
+      console.log("Error reading model from localStorage");
+    }
   }, [conversationId]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -89,7 +93,7 @@ export function ChatInputForm({
       await onSubmit(currentMessage, selectedModel);
     } catch (err) {
       const errorMessage =
-        (err as { message?: string }).message || "Request failed";
+        (err as { message?: string }).message ?? "Request failed";
       setError(errorMessage);
     }
   }
@@ -108,7 +112,7 @@ export function ChatInputForm({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e);
+                void handleSubmit(e);
               }
             }}
           />
@@ -142,7 +146,10 @@ export function ChatInputForm({
                   window.localStorage.setItem(GLOBAL_KEY, next);
                   if (CONV_KEY) window.localStorage.setItem(CONV_KEY, next);
                 }
-              } catch {}
+              } catch {
+                // Ignore errors writing to localStorage
+                console.log("Error saving model to localStorage");
+              }
             }}
             disabled={isLoading}
           >

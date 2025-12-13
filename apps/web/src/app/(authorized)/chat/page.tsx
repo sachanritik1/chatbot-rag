@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Chat with LLMs",
 };
 
-const Page = async () => {
+const Page = () => {
   return (
     <>
       <ChatHeader title="Create a new conversation" />

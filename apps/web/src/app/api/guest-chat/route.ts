@@ -1,11 +1,11 @@
-import { NextResponse  } from "next/server";
-import type {NextRequest} from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { getModelConfig } from "@/config/models";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
+import { createModelInstance } from "@/lib/llm";
 
 const schema = z.object({
   query: z.string().min(1, "Query is required"),
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
           count?: number;
         };
         if (
-          parsedExisting?.date === today &&
+          parsedExisting.date === today &&
           typeof parsedExisting.count === "number"
         ) {
           rl = { date: today, count: parsedExisting.count };
@@ -96,9 +96,10 @@ export async function POST(req: NextRequest) {
     // Create streaming response with Vercel AI SDK
     const cfg = getModelConfig(model);
     const prompt = `You are a helpful assistant. Answer the user's question clearly and concisely.\nUser: ${query}\nAI:`;
+    const modelInstance = createModelInstance(cfg.id);
 
-    const result = await streamText({
-      model: openai(cfg.modelName),
+    const result = streamText({
+      model: modelInstance.modelInstance,
       prompt,
       temperature: cfg.supports.temperature
         ? cfg.defaultParams?.temperature

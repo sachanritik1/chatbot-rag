@@ -13,7 +13,7 @@ function toUIMessage(msg: {
   sender: "user" | "assistant";
   message: string;
   created_at: string;
-  model?: string | null;
+  model?: ModelId;
 }): Message {
   return {
     id: msg.id,
@@ -39,7 +39,7 @@ export function useChatHandler(
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [currentModel, setCurrentModel] = useState<ModelId>(
-    initialModel || DEFAULT_MODEL_ID,
+    initialModel ?? DEFAULT_MODEL_ID,
   );
 
   // Handle first message or regenerate from URL params
@@ -49,20 +49,20 @@ export function useChatHandler(
     const urlParams = new URLSearchParams(window.location.search);
     const firstMessage = urlParams.get("firstMessage");
     const regenerate = urlParams.get("regenerate");
-    const modelParam = urlParams.get("model");
+    const modelParam = urlParams.get("model") as ModelId | null | undefined;
 
     if (conversationId && firstMessage && messages.length === 0) {
       window.history.replaceState({}, "", `/chat/${conversationId}`);
-      const model = (modelParam as ModelId) || DEFAULT_MODEL_ID;
-      handleSendMessage(firstMessage, model);
+      const model = modelParam ?? DEFAULT_MODEL_ID;
+      void handleSendMessage(firstMessage, model);
     } else if (conversationId && regenerate === "true" && messages.length > 0) {
       window.history.replaceState({}, "", `/chat/${conversationId}`);
       const lastUserMessage = [...messages]
         .reverse()
         .find((m) => m.role === "user");
       if (lastUserMessage) {
-        const model = (modelParam as ModelId) || DEFAULT_MODEL_ID;
-        handleSendMessage(lastUserMessage.content, model);
+        const model = modelParam ?? DEFAULT_MODEL_ID;
+        void handleSendMessage(lastUserMessage.content, model);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,7 +73,7 @@ export function useChatHandler(
     messageText: string,
     model: ModelId = DEFAULT_MODEL_ID,
   ) => {
-    const validModel = model || currentModel || DEFAULT_MODEL_ID;
+    const validModel = model;
 
     // Create conversation if needed
     if (!conversationId) {
@@ -87,12 +87,14 @@ export function useChatHandler(
 
       let title = "New Conversation";
       if (titleResponse.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = await titleResponse.json();
-        title = data.title || title;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        title = data.title ?? title;
       }
 
       const result = await createEmptyConversation({ title });
-      if (result.error || !result.conversationId) {
+      if (result.error ?? !result.conversationId) {
         console.error("Error creating conversation:", result.error);
         setLoadingMessage("");
         return;
@@ -124,7 +126,7 @@ export function useChatHandler(
         body: formData,
       });
 
-      if (!res.ok || !res.body) {
+      if (!res.body) {
         throw new Error(await res.text().catch(() => "Request failed"));
       }
 
@@ -149,7 +151,7 @@ export function useChatHandler(
           if (last?.role === "bot") {
             updated[updated.length - 1] = {
               ...last,
-              content: (last.content || "") + chunk,
+              content: last.content + chunk,
             };
           }
           return updated;
@@ -174,22 +176,29 @@ export function useChatHandler(
     try {
       const oldest = messages[0];
       const res = await fetch(
-        `/api/messages?conversationId=${conversationId}&beforeId=${encodeURIComponent(oldest.id || "")}&limit=20`,
+        `/api/messages?conversationId=${conversationId}&beforeId=${encodeURIComponent(oldest?.id ?? "")}&limit=20`,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await res.json();
-      const older = (data?.data || []).map(toUIMessage);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const older = (data?.data ?? []).map(toUIMessage);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const pagination = data?.pagination;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (pagination?.totalPages && pagination?.page) {
         const noMore =
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           pagination.page <= 1 || pagination.page >= pagination.totalPages;
         setHasMore(!noMore);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       } else if (older.length === 0) {
         setHasMore(false);
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
       setMessages((prev) => [...older, ...prev]);
     } finally {
       setIsLoadingMore(false);

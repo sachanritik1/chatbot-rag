@@ -1,4 +1,5 @@
 // Re-export from shared package
+import type { Conversation } from "@chatbot-rag/shared";
 export type { Conversation } from "@chatbot-rag/shared";
 
 export interface ConversationTree {

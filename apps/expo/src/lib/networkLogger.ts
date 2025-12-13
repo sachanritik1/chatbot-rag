@@ -11,9 +11,9 @@ export function enableNetworkLogging() {
       typeof input === "string"
         ? input
         : input instanceof URL
-        ? input.toString()
-        : input.url;
-    const method = init?.method || "GET";
+          ? input.toString()
+          : input.url;
+    const method = init?.method ?? "GET";
 
     console.log(`🌐 [${method}] ${url}`);
     console.log("📋 Request Headers:", init?.headers);
@@ -22,7 +22,7 @@ export function enableNetworkLogging() {
         "📦 Request Body:",
         typeof init.body === "string"
           ? init.body.slice(0, 200) + (init.body.length > 200 ? "..." : "")
-          : init.body
+          : init.body,
       );
     }
 

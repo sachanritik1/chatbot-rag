@@ -1,4 +1,6 @@
-import type { ModelId } from "@chatbot-rag/shared";
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,6 +16,8 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import type { ModelId } from "@chatbot-rag/shared";
+
 import { useChatRN } from "../../hooks/useChatRN";
 import { supabase } from "../../lib/supabase";
 
@@ -21,7 +25,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-  timestamp?: Date;
+  timestamp: Date;
 }
 
 export default function Chat() {
@@ -50,7 +54,7 @@ export default function Chat() {
       setAuthToken(session.access_token);
     }
 
-    getToken();
+    void getToken();
   }, [router]);
 
   // Use custom chat hook
@@ -99,7 +103,7 @@ export default function Chat() {
     }
 
     if (conversationId && authToken) {
-      loadMessages();
+      void loadMessages();
     }
   }, [conversationId, authToken, setMessages]);
 

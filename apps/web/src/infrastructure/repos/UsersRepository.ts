@@ -7,9 +7,9 @@ export class SupabaseUsersRepository implements UsersRepository {
   constructor(private supabaseClient?: SupabaseClient) {}
 
   async getCurrentUser(): Promise<UserIdentity | null> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase.auth.getUser();
-    const id = res.data?.user?.id ?? null;
+    const id = res.data.user?.id ?? null;
     return id ? { id } : null;
   }
 }

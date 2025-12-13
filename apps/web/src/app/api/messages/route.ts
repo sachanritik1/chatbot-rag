@@ -1,4 +1,4 @@
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { UserService } from "@/domain/users/UserService";
@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const parse = schema.safeParse({
     conversationId: url.searchParams.get("conversationId"),
-    beforeId: url.searchParams.get("beforeId") || undefined,
-    limit: url.searchParams.get("limit") || undefined,
+    beforeId: url.searchParams.get("beforeId") ?? undefined,
+    limit: url.searchParams.get("limit") ?? undefined,
   });
 
   if (!parse.success) {
@@ -48,10 +48,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (!beforeId) {
+    return NextResponse.json({ data: [], pagination: null });
+  }
+
   const chatsRepo = new SupabaseChatsRepository(supabaseClient);
   const { data, nextPage, totalPages, totalCount } = await chatsRepo.getOlder(
     conversationId,
-    beforeId!,
+    beforeId,
     limit,
   );
   return NextResponse.json({

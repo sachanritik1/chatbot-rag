@@ -15,14 +15,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const body = await request.json();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { query } = body;
 
     if (!query || typeof query !== "string") {
-      return NextResponse.json(
-        { error: "Query is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
     const title = await generateTitle(query);

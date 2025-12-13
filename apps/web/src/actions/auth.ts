@@ -8,6 +8,7 @@ import { AuthService } from "@/domain/auth/AuthService";
 import { SupabaseAuthRepository } from "@/infrastructure/repos/AuthRepository";
 import { z } from "zod";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
+import { env } from "@/env";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -57,8 +58,7 @@ export async function signInWithGoogle() {
 
   const originHeader = (await headers()).get("origin");
   console.log("originHeader", originHeader);
-  const siteUrl =
-    originHeader || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = originHeader ?? env.NEXT_PUBLIC_SITE_URL;
   console.log("siteUrl", siteUrl);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -76,7 +76,7 @@ export async function signInWithGoogle() {
     throw new Error("Failed to start Google sign-in. Please try again.");
   }
 
-  if (data?.url) {
+  if (data.url) {
     redirect(data.url);
   }
 

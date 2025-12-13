@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { Message } from "@/components/MessageList";
-import { DEFAULT_MODEL_ID  } from "@/config/models";
-import type {ModelId} from "@/config/models";
+import { DEFAULT_MODEL_ID } from "@/config/models";
+import type { ModelId } from "@/config/models";
 
 export function useGuestChatHandler() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -65,7 +65,7 @@ export function useGuestChatHandler() {
       setLoadingMessage("");
     } catch (err) {
       console.error("Error sending guest message:", err);
-      const message = (err as { message?: string }).message || "Request failed";
+      const message = (err as { message?: string }).message ?? "Request failed";
       setMessages((msgs) => [
         ...msgs,
         {

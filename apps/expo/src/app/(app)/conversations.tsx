@@ -1,16 +1,18 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
   Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "../../lib/supabase";
+
 import type { Conversation } from "@chatbot-rag/shared";
+
+import { supabase } from "../../lib/supabase";
 
 export default function Conversations() {
   const router = useRouter();
@@ -18,38 +20,41 @@ export default function Conversations() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadConversations();
-  }, []);
+  const loadConversations = useCallback(
+    async function () {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-  async function loadConversations() {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        if (!user) {
+          router.replace("/(auth)/login");
+          return;
+        }
 
-      if (!user) {
-        router.replace("/(auth)/login");
-        return;
+        const { data, error } = await supabase
+          .from("conversations")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setConversations(data);
+      } catch (error: unknown) {
+        console.error("Error loading conversations:", error);
+        Alert.alert("Error", (error as Error).message);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
+    },
+    [router],
+  );
 
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      setConversations(data || []);
-    } catch (error: any) {
-      console.error("Error loading conversations:", error);
-      Alert.alert("Error", error.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }
+  useEffect(() => {
+    void loadConversations();
+  }, [loadConversations, router]);
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -60,9 +65,9 @@ export default function Conversations() {
     }
   }
 
-  function onRefresh() {
+  async function onRefresh() {
     setRefreshing(true);
-    loadConversations();
+    await loadConversations();
   }
 
   function formatDate(dateString: string) {

@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   description: "Chat with LLMs without signing in (10 messages/day)",
 };
 
-export default async function Page() {
+export default function Page() {
   return (
     <SidebarProvider>
       <GuestSideBar />
-      <main className="h-[100svh] w-screen flex-1 space-y-2 p-4 sm:h-screen">
+      <main className="h-svh w-screen flex-1 space-y-2 p-4 sm:h-screen">
         <ChatHeader title="Chat with LLMs" />
         <GuestChatPage />
       </main>

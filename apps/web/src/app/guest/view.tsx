@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { MessageList  } from "@/components/MessageList";
-import type {Message} from "@/components/MessageList";
+import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import { useGuestChatHandler } from "@/hooks/use-guest-chat-handler";
 
@@ -22,10 +21,7 @@ export default function GuestChatPage() {
       </CardContent>
 
       <CardFooter>
-        <ChatInputForm
-          onSubmit={handleSendMessage}
-          isLoading={isLoading}
-        />
+        <ChatInputForm onSubmit={handleSendMessage} isLoading={isLoading} />
       </CardFooter>
     </Card>
   );

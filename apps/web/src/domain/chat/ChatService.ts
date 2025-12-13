@@ -38,12 +38,13 @@ export class ChatService {
 
     // Retrieve history
     const recent = await this.deps.chats.getRecent(conversationId, 10);
-    const history = (recent as { data: unknown } | { data: null })
-      .data as {
-      sender: "user" | "assistant";
-      message: string;
-      created_at: string;
-    }[] | null;
+    const history = (recent as { data: unknown } | { data: null }).data as
+      | {
+          sender: "user" | "assistant";
+          message: string;
+          created_at: string;
+        }[]
+      | null;
     const safeHistory = Array.isArray(history) ? history : [];
 
     // Persist user message immediately
@@ -54,7 +55,7 @@ export class ChatService {
       model ?? undefined,
     );
 
-    const formattedPrompt = await this.deps.buildPrompt({
+    const formattedPrompt = this.deps.buildPrompt({
       history: safeHistory,
       question,
     });
@@ -65,7 +66,7 @@ export class ChatService {
     const stream = new ReadableStream<Uint8Array>({
       start: async (controller) => {
         try {
-          const result = await this.deps.llm.stream(formattedPrompt);
+          const result = this.deps.llm.stream(formattedPrompt);
 
           // Vercel AI SDK provides textStream
           for await (const textPart of result.textStream) {

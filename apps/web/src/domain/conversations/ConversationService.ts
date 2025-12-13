@@ -32,7 +32,7 @@ export class ConversationService {
     return this.conversations.verifyOwnership(userId, conversationId);
   }
 
-  async getById(conversationId: string) {
+  getById(conversationId: string) {
     return this.conversations.getById(conversationId);
   }
 }

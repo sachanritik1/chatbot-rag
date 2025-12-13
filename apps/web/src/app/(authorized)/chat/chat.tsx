@@ -116,9 +116,14 @@ export default function ChatPage({
         .find((m) => m.role === "user");
       if (lastUserMsg) {
         const modelToUse = regenerateModel ?? currentModel;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentModel(modelToUse);
         setHasTriggeredRegenerate(true);
-        triggerRegeneration(lastUserMsg.content, conversationId, modelToUse);
+        void triggerRegeneration(
+          lastUserMsg.content,
+          conversationId,
+          modelToUse,
+        );
       }
     }
   }, [

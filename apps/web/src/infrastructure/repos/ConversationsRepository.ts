@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type {
   ConversationsRepository,
   Conversation,
@@ -12,18 +13,19 @@ export class SupabaseConversationsRepository
   constructor(private supabaseClient?: SupabaseClient) {}
 
   async create(userId: string, title: string): Promise<{ id: string } | null> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .insert([{ user_id: userId, title }])
       .select("id")
       .single();
-    if (res.error || !res.data) return null;
+    if (res.error) return null;
+
     return { id: res.data.id };
   }
 
   async updateTitle(conversationId: string, title: string): Promise<boolean> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .update({ title })
@@ -32,7 +34,7 @@ export class SupabaseConversationsRepository
   }
 
   async markAsHavingMessages(conversationId: string): Promise<boolean> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const { error } = await supabase
       .from("conversations")
       .update({ has_messages: true })
@@ -41,7 +43,7 @@ export class SupabaseConversationsRepository
   }
 
   async listByUserId(userId: string): Promise<Conversation[]> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .select(
@@ -54,14 +56,14 @@ export class SupabaseConversationsRepository
       console.error("Error fetching conversations:", res.error);
     }
     console.log(
-      `Fetched ${res.data?.length || 0} conversations for user ${userId}`,
+      `Fetched ${res.data?.length ?? 0} conversations for user ${userId}`,
     );
 
     return (res.data ?? []) as Conversation[];
   }
 
   async deleteById(id: string): Promise<boolean> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase.from("conversations").delete().eq("id", id);
     return !res.error;
   }
@@ -70,7 +72,7 @@ export class SupabaseConversationsRepository
     userId: string,
     conversationId: string,
   ): Promise<boolean> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .select("user_id")
@@ -81,7 +83,7 @@ export class SupabaseConversationsRepository
   }
 
   async getById(conversationId: string) {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .select(
@@ -89,7 +91,7 @@ export class SupabaseConversationsRepository
       )
       .eq("id", conversationId)
       .single();
-    return res.error || !res.data ? null : (res.data as Conversation);
+    return (res.error ?? !res.data) ? null : (res.data as Conversation);
   }
 
   async createBranch(
@@ -99,10 +101,13 @@ export class SupabaseConversationsRepository
     title: string,
     branchLabel?: string,
   ): Promise<{ id: string } | null> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
 
     // Verify ownership
-    const parentOwned = await this.verifyOwnership(userId, parentConversationId);
+    const parentOwned = await this.verifyOwnership(
+      userId,
+      parentConversationId,
+    );
     if (!parentOwned) {
       console.error("Parent conversation not owned by user");
       return null;
@@ -117,7 +122,7 @@ export class SupabaseConversationsRepository
           title,
           parent_conversation_id: parentConversationId,
           parent_message_id: parentMessageId,
-          branch_label: branchLabel || null,
+          branch_label: branchLabel ?? null,
         },
       ])
       .select("id")
@@ -127,10 +132,6 @@ export class SupabaseConversationsRepository
       console.error("Error creating conversation:", res.error);
       return null;
     }
-    if (!res.data) {
-      console.error("No data returned from conversation creation");
-      return null;
-    }
 
     const newConversationId = res.data.id;
     console.log("New conversation created:", newConversationId);
@@ -138,12 +139,14 @@ export class SupabaseConversationsRepository
     // Copy messages up to branch point
     console.log("Copying messages:", {
       source_conv_id: parentConversationId,
+
       target_conv_id: newConversationId,
       until_message_id: parentMessageId,
     });
 
     const copyRes = await supabase.rpc("copy_messages_until", {
       source_conv_id: parentConversationId,
+
       target_conv_id: newConversationId,
       until_message_id: parentMessageId,
     });
@@ -151,7 +154,7 @@ export class SupabaseConversationsRepository
     if (copyRes.error) {
       console.error("Error copying messages:", copyRes.error);
       console.error("Full error details:", JSON.stringify(copyRes.error));
-      await this.deleteById(newConversationId);
+      await this.deleteById(newConversationId as string);
       return null;
     }
 
@@ -160,7 +163,7 @@ export class SupabaseConversationsRepository
   }
 
   async getBranches(conversationId: string): Promise<Conversation[]> {
-    const supabase = this.supabaseClient || (await createClient());
+    const supabase = this.supabaseClient ?? (await createClient());
     const res = await supabase
       .from("conversations")
       .select(

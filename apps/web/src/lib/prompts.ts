@@ -1,9 +1,6 @@
 import type { BuildPromptFn } from "@/domain/chat/types";
 
-export const buildChatPrompt: BuildPromptFn = async ({
-  history,
-  question,
-}) => {
+export const buildChatPrompt: BuildPromptFn = ({ history, question }) => {
   const formatMessages = (
     messages: { sender: "user" | "assistant"; message: string }[],
   ) =>

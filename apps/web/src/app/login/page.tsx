@@ -15,10 +15,10 @@ export default async function Login({
   const current = await userService.requireCurrentUser().catch(() => null);
   if (current?.id) redirect("/chat");
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] transition-colors duration-300 dark:from-[#18181b] dark:to-[#23272f]">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#f8fafc] to-[#e0e7ef] transition-colors duration-300 dark:from-[#18181b] dark:to-[#23272f]">
       <LoginThemeToggle />
       <div className="flex w-full max-w-md flex-col items-center gap-4 px-4">
-        <AuthForm defaultMode={sp?.mode === "signup" ? "signup" : "login"} />
+        <AuthForm defaultMode={sp.mode === "signup" ? "signup" : "login"} />
         <div className="flex items-center gap-3 text-sm">
           <Link
             href="/guest"

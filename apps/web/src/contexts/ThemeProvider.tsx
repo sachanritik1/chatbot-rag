@@ -30,7 +30,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() =>
     typeof window !== "undefined"
-      ? (localStorage.getItem(storageKey) as Theme) || defaultTheme
+      ? ((localStorage.getItem(storageKey) ?? defaultTheme) as Theme)
       : defaultTheme,
   );
 
@@ -69,9 +69,5 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
   return context;
 };

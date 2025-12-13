@@ -38,4 +38,4 @@ export interface ConversationsRepository {
 export type BuildPromptFn = (args: {
   history: ChatHistory[];
   question: string;
-}) => Promise<string>;
+}) => string;

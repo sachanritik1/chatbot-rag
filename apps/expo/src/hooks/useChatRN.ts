@@ -1,6 +1,7 @@
-import type { Message } from "@chatbot-rag/shared";
 import { useState } from "react";
 import { fetch as streamingFetch } from "react-native-fetch-api";
+
+import type { Message } from "@chatbot-rag/shared";
 
 import { API_BASE_URL } from "../config/api";
 import { supabase } from "../lib/supabase";
@@ -45,6 +46,7 @@ export function useChatRN({
         id: Date.now().toString(),
         role: "user",
         content,
+        timestamp: new Date(),
       };
       setMessages((prev) => [...prev, userMsg]);
 
@@ -118,6 +120,7 @@ export function useChatRN({
             id: assistantMsgId,
             role: "assistant",
             content: assistantMessage,
+            timestamp: new Date(),
           },
         ]);
       }
@@ -131,15 +134,16 @@ export function useChatRN({
         id: assistantMsgId,
         role: "assistant",
         content: assistantMessage,
+        timestamp: new Date(),
       };
 
       if (onFinish) {
         onFinish(finalMessage);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Chat error:", error);
       if (onError) {
-        onError(error);
+        onError(error as Error);
       }
     } finally {
       setStatus("idle");

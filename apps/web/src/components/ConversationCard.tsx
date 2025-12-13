@@ -42,9 +42,9 @@ const ConversationCard = ({
         <div className="flex flex-1 flex-col gap-1">
           <div className="flex items-center gap-2">
             {conversation.parent_conversation_id && (
-              <GitBranch className="h-3 w-3 text-muted-foreground shrink-0" />
+              <GitBranch className="text-muted-foreground h-3 w-3 shrink-0" />
             )}
-            <div className="line-clamp-2 text-sm leading-tight font-medium flex-1">
+            <div className="line-clamp-2 flex-1 text-sm leading-tight font-medium">
               {conversation.title}
             </div>
           </div>
@@ -64,7 +64,7 @@ const ConversationCard = ({
           onClick={(e) => {
             e.stopPropagation();
             setIsDeleting(true);
-            deleteConversation({ conversationId: conversation.id })
+            void deleteConversation({ conversationId: conversation.id })
               .then(() => {
                 // If we're on the deleted conversation's page, redirect to root
                 if (currentConversationId === conversation.id) {
