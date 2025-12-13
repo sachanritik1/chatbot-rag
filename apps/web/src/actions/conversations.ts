@@ -95,7 +95,7 @@ export async function createNewConversation(
   );
 
   if (error || !assistantMessage) {
-    return error?.message || "Error creating conversation";
+    return error?.message ?? "Error creating conversation";
   }
 
   revalidatePath("/(authorized)/chat", "layout");

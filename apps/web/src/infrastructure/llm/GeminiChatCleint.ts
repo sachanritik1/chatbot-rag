@@ -1,18 +1,18 @@
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
 import type { LlmClient } from "@/domain/chat/types";
 import { getModelConfig } from "@/config/models";
 import type { ModelId } from "@/config/models";
 
-export class OpenAIChatClient implements LlmClient {
+export class GeminiChatClient implements LlmClient {
   private readonly modelName: string;
   private readonly temperature?: number;
 
   constructor(modelId?: ModelId) {
     const cfg = getModelConfig(modelId);
-    if (cfg.provider !== "openai") {
+    if (cfg.provider !== "google") {
       throw new Error(
-        `OpenAIChatClient only supports OpenAI models, but got provider: ${cfg.provider}`,
+        `GeminiChatClient only supports Google models, but got provider: ${cfg.provider}`,
       );
     }
     this.modelName = cfg.modelName;
@@ -23,7 +23,7 @@ export class OpenAIChatClient implements LlmClient {
 
   stream(prompt: string) {
     return streamText({
-      model: openai(this.modelName),
+      model: google(this.modelName),
       prompt,
       temperature: this.temperature,
     });

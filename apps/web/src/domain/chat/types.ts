@@ -3,9 +3,9 @@ import type { ChatHistory } from "@/domain/chat/models";
 export type SenderRole = "user" | "assistant";
 
 export interface LlmClient {
-  stream(prompt: string): Promise<{
+  stream(prompt: string): {
     textStream: AsyncIterable<string>;
-  }>;
+  };
 }
 
 export interface ChatsRepository {

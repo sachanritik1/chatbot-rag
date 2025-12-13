@@ -1,10 +1,12 @@
+import type { ModelId } from "@/config/models";
+import { DEFAULT_MODEL_ID } from "@/config/models";
 import { buildChatService } from "@/domain/chat/buildService";
 
 export const chat = async (
   userId: string,
   conversationId: string,
   query: string,
-  model = "gpt-5-mini",
+  model: ModelId = DEFAULT_MODEL_ID,
 ) => {
   // Reuse ChatService but collect the streaming output into a string
   const service = buildChatService(model);

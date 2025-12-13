@@ -1,18 +1,14 @@
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
 import { UserService } from "@/domain/users/UserService";
 import { createAPIUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
-import {
-  ALLOWED_MODEL_IDS,
-  DEFAULT_MODEL_ID,
-  getModelConfig,
-} from "@/config/models";
+import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import { buildChatPrompt } from "@/lib/prompts";
 import { createAPIClient } from "@/utils/supabase/api";
+import { createModelInstance } from "@/lib/llm";
 
 const schema = z.object({
   messages: z.array(
@@ -28,11 +24,7 @@ const schema = z.object({
     }),
   ),
   conversationId: z.string().optional(),
-  model: z
-    .enum(ALLOWED_MODEL_IDS)
-    .or(z.literal(""))
-    .transform((val) => (val === "" ? DEFAULT_MODEL_ID : val))
-    .pipe(z.enum(ALLOWED_MODEL_IDS)),
+  model: z.enum(ALLOWED_MODEL_IDS).optional().default(DEFAULT_MODEL_ID),
 });
 
 export async function POST(req: Request) {
@@ -53,8 +45,11 @@ export async function POST(req: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    console.log("Request body received:", JSON.stringify(body).substring(0, 200));
+    const body = (await req.json()) as unknown;
+    console.log(
+      "Request body received:",
+      JSON.stringify(body).substring(0, 200),
+    );
 
     const parseResult = schema.safeParse(body);
 
@@ -67,7 +62,12 @@ export async function POST(req: Request) {
     }
 
     const { messages, conversationId, model } = parseResult.data;
-    console.log("Parsed successfully. Model:", model, "ConversationId:", conversationId);
+    console.log(
+      "Parsed successfully. Model:",
+      model,
+      "ConversationId:",
+      conversationId,
+    );
 
     // Get the last user message and extract text from parts
     const lastUserMessage = [...messages]
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
     // Extract text content from parts array
     const textPart = lastUserMessage.parts.find((p) => p.type === "text");
-    const messageText = textPart?.text || "";
+    const messageText = textPart?.text ?? "";
 
     if (!messageText) {
       return Response.json({ error: "No message text found" }, { status: 400 });
@@ -87,7 +87,9 @@ export async function POST(req: Request) {
 
     // Verify conversation ownership
     if (conversationId) {
-      const conversationsRepo = new SupabaseConversationsRepository(supabaseClient);
+      const conversationsRepo = new SupabaseConversationsRepository(
+        supabaseClient,
+      );
       const owns = await conversationsRepo.verifyOwnership(
         userId,
         conversationId,
@@ -127,13 +129,12 @@ export async function POST(req: Request) {
     console.log("Prompt built, getting model config...");
 
     // Get model config
-    const modelConfig = getModelConfig(model);
-    console.log("Model config:", modelConfig.modelName);
+    const { modelInstance, cfg: modelConfig } = createModelInstance(model);
 
     // Stream with AI SDK
     console.log("Starting streamText...");
     const result = streamText({
-      model: openai(modelConfig.modelName),
+      model: modelInstance,
       prompt: formattedPrompt,
       temperature: modelConfig.supports.temperature
         ? modelConfig.defaultParams?.temperature
@@ -153,9 +154,18 @@ export async function POST(req: Request) {
     return response;
   } catch (error) {
     console.error("=== ERROR in chat API ===");
-    console.error("Error type:", error instanceof Error ? error.name : typeof error);
-    console.error("Error message:", error instanceof Error ? error.message : String(error));
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "Error type:",
+      error instanceof Error ? error.name : typeof error,
+    );
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error),
+    );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     return Response.json(
       { error: "Something went wrong", success: false },
       { status: 500 },

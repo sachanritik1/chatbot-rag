@@ -14,10 +14,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@chatbot-rag/shared": "workspace:*",
-    "@chatbot-rag/config": "workspace:*",
+    "@ai-sdk/google": "^2.0.46",
     "@ai-sdk/openai": "^2.0.76",
     "@ai-sdk/react": "^2.0.108",
+    "@chatbot-rag/api": "workspace:*",
+    "@chatbot-rag/config": "workspace:*",
+    "@chatbot-rag/shared": "workspace:*",
+    "@chatbot-rag/ui": "workspace:*",
+    "@chatbot-rag/validators": "workspace:*",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-label": "^2.1.6",
@@ -28,6 +32,7 @@
     "@shadcn/ui": "^0.0.4",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.106",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -41,13 +46,13 @@
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.2.0",
-    "zod": "^3.24.4",
-    "@chatbot-rag/api": "workspace:*",
-    "@chatbot-rag/ui": "workspace:*",
-    "@chatbot-rag/validators": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.8"
+    "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/prettier-config": "workspace:*",
+    "@chatbot-rag/tailwind-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
@@ -55,17 +60,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "eslint": "catalog:",
     "eslint-config-next": "15.3.2",
+    "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.2.9",
-    "@chatbot-rag/eslint-config": "workspace:*",
-    "@chatbot-rag/prettier-config": "workspace:*",
-    "@chatbot-rag/tsconfig": "workspace:*",
-    "@chatbot-rag/tailwind-config": "workspace:*",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "packageManager": "pnpm@10.12.1"
+  }
 }

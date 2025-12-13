@@ -201,6 +201,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@ai-sdk/google':
+        specifier: ^2.0.46
+        version: 2.0.46(zod@3.25.76)
       '@ai-sdk/openai':
         specifier: ^2.0.76
         version: 2.0.80(zod@3.25.76)
@@ -712,6 +715,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/google@2.0.46':
+    resolution: {integrity: sha512-8PK6u4sGE/kXebd7ZkTp+0aya4kNqzoqpS5m7cHY2NfTK6fhPc6GNvE+MZIZIoHQTp5ed86wGBdeBPpFaaUtyg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/openai@2.0.80':
     resolution: {integrity: sha512-tNHuraF11db+8xJEDBoU9E3vMcpnHFKRhnLQ3DQX2LnEzfPB9DksZ8rE+yVuDN1WRW9cm2OWAhgHFgVKs7ICuw==}
     engines: {node: '>=18'}
@@ -720,6 +729,12 @@ packages:
 
   '@ai-sdk/provider-utils@3.0.18':
     resolution: {integrity: sha512-ypv1xXMsgGcNKUP+hglKqtdDuMg68nWHucPPAhIENrbFAI+xCHiqPVN8Zllxyv1TNZwGWUghPxJXU+Mqps0YRQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@3.0.19':
+    resolution: {integrity: sha512-W41Wc9/jbUVXVwCN/7bWa4IKe8MtxO3EyA0Hfhx6grnmiYlCvpI8neSYWFE0zScXJkgA/YK3BRybzgyiXuu6JA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -8432,6 +8447,12 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 3.25.76
 
+  '@ai-sdk/google@2.0.46(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
+      zod: 3.25.76
+
   '@ai-sdk/openai@2.0.80(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -8439,6 +8460,13 @@ snapshots:
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.18(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
+      zod: 3.25.76
+
+  '@ai-sdk/provider-utils@3.0.19(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
@@ -11488,7 +11516,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.0.8)
-      metro-config: 0.83.3(bufferutil@4.0.8)
+      metro-config: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -15311,21 +15339,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  metro-config@0.83.3(bufferutil@4.0.8):
-    dependencies:
-      connect: 3.7.0
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.83.3(bufferutil@4.0.8)
-      metro-cache: 0.83.3
-      metro-core: 0.83.3
-      metro-runtime: 0.83.3
-      yaml: 2.8.1
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   metro-config@0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4):
     dependencies:
       connect: 3.7.0
@@ -15683,7 +15696,7 @@ snapshots:
       metro-babel-transformer: 0.83.3
       metro-cache: 0.83.3
       metro-cache-key: 0.83.3
-      metro-config: 0.83.3(bufferutil@4.0.8)
+      metro-config: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       metro-core: 0.83.3
       metro-file-map: 0.83.3
       metro-resolver: 0.83.3

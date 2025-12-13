@@ -17,7 +17,8 @@ export const env = createEnv({
    */
   server: {
     // POSTGRES_URL: z.url(),
-    OPENAI_API_KEY: z.string().min(1),
+    // OPENAI_API_KEY: z.string().min(1),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
   },
 
   /**
