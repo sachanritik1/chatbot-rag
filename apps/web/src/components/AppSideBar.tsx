@@ -41,7 +41,7 @@ export default async function AppSideBar() {
       new SupabaseChatsRepository(),
     );
     const list = await service.listForUser(userId);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     return { data: list } as PostgrestSingleResponse<Conversation[]>;
   })();
 

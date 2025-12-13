@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { env } from "@/env";
-import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 /**
  * Create a Supabase client for API routes that supports both:
@@ -49,7 +48,7 @@ export async function createAPIClient(request: Request) {
           cookiesToSet: {
             name: string;
             value: string;
-            options?: Partial<ResponseCookie>;
+            options?: Record<string, unknown>;
           }[],
         ) {
           try {

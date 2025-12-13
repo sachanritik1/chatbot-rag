@@ -151,7 +151,7 @@ export async function POST(req: Request) {
 
     console.log("Building prompt...");
     // Build prompt with history
-    const formattedPrompt = await buildChatPrompt({
+    const formattedPrompt = buildChatPrompt({
       history,
       question: messageText,
     });

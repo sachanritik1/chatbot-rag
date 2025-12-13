@@ -3,7 +3,6 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { env } from "@/env";
-import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -20,12 +19,20 @@ export async function createClient() {
           cookiesToSet: {
             name: string;
             value: string;
-            options?: Partial<ResponseCookie>;
+            options?: Record<string, unknown>;
           }[],
         ) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+            cookiesToSet.forEach(
+              ({
+                name,
+                value,
+                options,
+              }: {
+                name: string;
+                value: string;
+                options?: Record<string, unknown>;
+              }) => cookieStore.set(name, value, options),
             );
           } catch {
             // The `setAll` method was called from a Server Component.
