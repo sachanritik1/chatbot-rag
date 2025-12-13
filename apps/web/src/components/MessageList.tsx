@@ -4,13 +4,13 @@ import { useEffect, useRef } from "react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { Bot } from "lucide-react";
 
-export type Message = {
+export interface Message {
   id?: string;
   role: "user" | "bot";
   content: string;
   timestamp: Date;
   model?: string | null;
-};
+}
 
 import type { ModelId } from "@/config/models";
 

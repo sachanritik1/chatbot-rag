@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import ChatPage from "../chat";
 import ChatHeader from "@/components/ChatHeader";
 //
@@ -8,7 +8,7 @@ import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository"
 
 export const dynamic = "force-dynamic";
 
-type Props = {
+interface Props {
   params: Promise<{
     conversationId: string;
   }>;
@@ -16,7 +16,7 @@ type Props = {
     regenerate?: string;
     model?: string;
   }>;
-};
+}
 
 // Dynamic metadata based on conversationId
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

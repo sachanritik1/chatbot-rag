@@ -44,16 +44,16 @@
     "react-native-url-polyfill": "^3.0.0"
   },
   "devDependencies": {
-    "@acme/api": "workspace:*",
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@chatbot-rag/api": "workspace:*",
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/prettier-config": "workspace:*",
+    "@chatbot-rag/tailwind-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@chatbot-rag/prettier-config"
 }

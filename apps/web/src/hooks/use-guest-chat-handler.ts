@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Message } from "@/components/MessageList";
-import { DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
+import type { Message } from "@/components/MessageList";
+import { DEFAULT_MODEL_ID  } from "@/config/models";
+import type {ModelId} from "@/config/models";
 
 export function useGuestChatHandler() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,7 +52,7 @@ export function useGuestChatHandler() {
         setMessages((msgs) => {
           const updated = [...msgs];
           const last = updated[updated.length - 1];
-          if (last && last.role === "bot") {
+          if (last?.role === "bot") {
             updated[updated.length - 1] = {
               ...last,
               content: (last.content || "") + chunk,

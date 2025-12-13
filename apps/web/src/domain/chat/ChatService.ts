@@ -5,12 +5,12 @@ import type {
   BuildPromptFn,
 } from "@/domain/chat/types";
 
-type SendMessageInput = {
+interface SendMessageInput {
   userId: string;
   conversationId: string;
   question: string;
   model?: string | null;
-};
+}
 
 export class ChatService {
   constructor(
@@ -39,11 +39,11 @@ export class ChatService {
     // Retrieve history
     const recent = await this.deps.chats.getRecent(conversationId, 10);
     const history = (recent as { data: unknown } | { data: null })
-      .data as Array<{
+      .data as {
       sender: "user" | "assistant";
       message: string;
       created_at: string;
-    }> | null;
+    }[] | null;
     const safeHistory = Array.isArray(history) ? history : [];
 
     // Persist user message immediately

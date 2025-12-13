@@ -4,7 +4,7 @@ export const chat = async (
   userId: string,
   conversationId: string,
   query: string,
-  model: string = "gpt-5-mini",
+  model = "gpt-5-mini",
 ) => {
   // Reuse ChatService but collect the streaming output into a string
   const service = buildChatService(model);

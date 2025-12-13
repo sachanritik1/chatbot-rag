@@ -8,9 +8,10 @@ import { Loader2, Send } from "lucide-react";
 import {
   MODEL_OPTIONS,
   DEFAULT_MODEL_ID,
-  type ModelId,
-  ALLOWED_MODEL_IDS,
+  
+  ALLOWED_MODEL_IDS
 } from "@/config/models";
+import type {ModelId} from "@/config/models";
 import {
   Select,
   SelectContent,
@@ -49,8 +50,8 @@ export function ChatInputForm({
         ? `model_for_conversation:${conversationId}`
         : undefined;
 
-      const tryRead = (key?: string | undefined): string | null =>
-        key ? (window.localStorage.getItem(key) as string | null) : null;
+      const tryRead = (key?: string  ): string | null =>
+        key ? (window.localStorage.getItem(key)) : null;
 
       const isAllowed = (m: unknown): m is ModelId =>
         typeof m === "string" &&

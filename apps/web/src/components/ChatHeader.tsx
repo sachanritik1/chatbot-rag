@@ -3,9 +3,9 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-type ChatHeaderProps = {
+interface ChatHeaderProps {
   title?: string;
-};
+}
 
 export default function ChatHeader({ title }: ChatHeaderProps) {
   return (

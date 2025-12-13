@@ -4,17 +4,19 @@ import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { MessageList, Message } from "@/components/MessageList";
+import type { Message } from "@/components/MessageList";
+import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import {
   ALLOWED_MODEL_IDS,
-  DEFAULT_MODEL_ID,
-  type ModelId,
+  DEFAULT_MODEL_ID
+  
 } from "@/config/models";
+import type {ModelId} from "@/config/models";
 import { createEmptyConversation } from "@/actions/conversations";
 import { deleteMessagesAfter } from "@/actions/chats";
 
-type ChatPageProps = {
+interface ChatPageProps {
   title?: string;
   prevMessages?: {
     id?: string;
@@ -26,7 +28,7 @@ type ChatPageProps = {
   initialHasMore?: boolean;
   shouldRegenerate?: boolean;
   regenerateModel?: string;
-};
+}
 
 export default function ChatPage({
   prevMessages,
@@ -43,7 +45,7 @@ export default function ChatPage({
     .find(
       (m) =>
         typeof m.model === "string" &&
-        (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model as string),
+        (ALLOWED_MODEL_IDS as readonly string[]).includes(m.model),
     );
   const initialModel =
     (lastWithModel?.model as ModelId | undefined) || DEFAULT_MODEL_ID;

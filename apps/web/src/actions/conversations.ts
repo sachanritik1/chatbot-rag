@@ -163,7 +163,7 @@ export async function updateConversationTitle(
 
   // Verify ownership
   const conversation = await repo.getById(conversationId);
-  if (!conversation || conversation.user_id !== userId) {
+  if (conversation?.user_id !== userId) {
     return { error: "Unauthorized" };
   }
 

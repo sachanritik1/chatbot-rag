@@ -1,5 +1,5 @@
 {
-  "name": "@acme/api",
+  "name": "@chatbot-rag/api",
   "private": true,
   "type": "module",
   "exports": {
@@ -18,20 +18,20 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/validators": "workspace:*",
+    "@chatbot-rag/auth": "workspace:*",
+    "@chatbot-rag/db": "workspace:*",
+    "@chatbot-rag/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/prettier-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@chatbot-rag/prettier-config"
 }

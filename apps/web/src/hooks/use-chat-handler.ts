@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createEmptyConversation } from "@/actions/conversations";
-import { Message } from "@/components/MessageList";
-import { DEFAULT_MODEL_ID, ModelId } from "@/config/models";
+import type { Message } from "@/components/MessageList";
+import type { ModelId } from "@/config/models";
+import { DEFAULT_MODEL_ID } from "@/config/models";
 
 // Helper: Convert API message to UI message
 function toUIMessage(msg: {
@@ -25,7 +26,7 @@ function toUIMessage(msg: {
 
 export function useChatHandler(
   initialMessages: Message[] = [],
-  initialHasMore: boolean = true,
+  initialHasMore = true,
   initialModel?: ModelId,
 ) {
   const params = useParams();
@@ -145,7 +146,7 @@ export function useChatHandler(
         setMessages((msgs) => {
           const updated = [...msgs];
           const last = updated[updated.length - 1];
-          if (last && last.role === "bot") {
+          if (last?.role === "bot") {
             updated[updated.length - 1] = {
               ...last,
               content: (last.content || "") + chunk,
@@ -207,7 +208,7 @@ export function useChatHandler(
       await handleSendMessage(message.content, model);
     } else {
       const userMessage = messages[messageIndex - 1];
-      if (!userMessage || userMessage.role !== "user") return;
+      if (userMessage?.role !== "user") return;
       setMessages((msgs) => msgs.slice(0, messageIndex - 1));
       await handleSendMessage(userMessage.content, model);
     }
@@ -220,7 +221,7 @@ export function useChatHandler(
     model: ModelId,
   ) => {
     const messageToEdit = messages[messageIndex];
-    if (!messageToEdit || messageToEdit.role !== "user") return;
+    if (messageToEdit?.role !== "user") return;
 
     setCurrentModel(model);
     setMessages((msgs) => msgs.slice(0, messageIndex));

@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import ChatHeader from "@/components/ChatHeader";
 import GuestChatPage from "./view";
 import { SidebarProvider } from "@/components/ui/sidebar";

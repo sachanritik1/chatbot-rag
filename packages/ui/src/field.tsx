@@ -2,11 +2,10 @@
 
 import type { VariantProps } from "class-variance-authority";
 import { useMemo } from "react";
+import { cn } from "@chatbot-rag/ui";
+import { Label } from "@chatbot-rag/ui/label";
+import { Separator } from "@chatbot-rag/ui/separator";
 import { cva } from "class-variance-authority";
-
-import { cn } from "@acme/ui";
-import { Label } from "@acme/ui/label";
-import { Separator } from "@acme/ui/separator";
 
 export function FieldSet({
   className,

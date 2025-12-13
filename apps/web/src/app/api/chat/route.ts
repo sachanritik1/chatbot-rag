@@ -102,11 +102,11 @@ export async function POST(req: Request) {
 
     // Get conversation history from DB
     const chatsRepo = new SupabaseChatsRepository(supabaseClient);
-    let history: Array<{
+    let history: {
       sender: "user" | "assistant";
       message: string;
       created_at: string;
-    }> = [];
+    }[] = [];
 
     if (conversationId) {
       const recent = await chatsRepo.getRecent(conversationId, 10);

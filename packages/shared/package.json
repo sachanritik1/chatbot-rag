@@ -16,9 +16,9 @@
     "@supabase/supabase-js": "^2.87.1"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/prettier-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "^5.9.2"

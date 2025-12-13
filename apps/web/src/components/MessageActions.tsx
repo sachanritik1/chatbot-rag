@@ -17,7 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DEFAULT_MODEL_ID, type ModelId } from "@/config/models";
+import { DEFAULT_MODEL_ID  } from "@/config/models";
+import type {ModelId} from "@/config/models";
 
 interface MessageActionsProps {
   role: "user" | "bot";

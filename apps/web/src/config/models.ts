@@ -1,6 +1,6 @@
 export type SupportedProvider = "openai"; // extend later: "anthropic" | "google"
 
-type BaseModelConfig = {
+interface BaseModelConfig {
   id: string;
   label: string;
   provider: SupportedProvider;
@@ -12,7 +12,7 @@ type BaseModelConfig = {
   defaultParams?: {
     temperature?: number;
   };
-};
+}
 
 const REGISTRY = {
   // "gpt-5-mini": {

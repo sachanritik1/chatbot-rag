@@ -11,13 +11,13 @@ import {
   SidebarHeader,
 } from "./ui/sidebar";
 import { redirect } from "next/navigation";
-import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Suspense } from "react";
 import ConversationCard from "./ConversationCard";
 import NewConversationButton from "./NewConversationButton";
 import ThemeToggleWrapper from "./ThemeToggleWrapper";
 import { MessageSquare, LogOut } from "lucide-react";
-import { Conversation } from "@/domain/conversations/types";
+import type { Conversation } from "@/domain/conversations/types";
 
 const logout = async () => {
   "use server";

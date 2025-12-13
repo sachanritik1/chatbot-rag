@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import type { ModelId } from "@/config/models";
 
-type ChatMessageProps = {
+interface ChatMessageProps {
   role: "user" | "bot";
   content: string;
   timestamp?: Date;
@@ -20,7 +20,7 @@ type ChatMessageProps = {
   model?: string | null;
   onRetry?: (model: ModelId) => void;
   onEdit?: (newContent: string, model: ModelId) => void;
-};
+}
 
 export function ChatMessage({
   role,

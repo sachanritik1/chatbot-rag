@@ -1,5 +1,5 @@
 {
-  "name": "@acme/ui",
+  "name": "@chatbot-rag/ui",
   "private": true,
   "type": "module",
   "exports": {
@@ -29,9 +29,9 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/prettier-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
     "eslint": "catalog:",
     "prettier": "catalog:",
@@ -43,5 +43,5 @@
     "react": "catalog:react19",
     "zod": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@chatbot-rag/prettier-config"
 }

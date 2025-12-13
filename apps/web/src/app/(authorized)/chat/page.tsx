@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import ChatPage from "./chat";
 import ChatHeader from "@/components/ChatHeader";
 

@@ -8,7 +8,7 @@ import Link from "next/link";
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
   const userService = new UserService(new SupabaseUsersRepository());

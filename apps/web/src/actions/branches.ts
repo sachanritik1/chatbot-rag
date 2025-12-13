@@ -8,7 +8,7 @@ import { UserService } from "@/domain/users/UserService";
 import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
 import { generateTitle } from "@/lib/llm";
 import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
-import { ChatHistory } from "@/domain/chat/models";
+import type { ChatHistory } from "@/domain/chat/models";
 
 const createBranchSchema = z.object({
   conversationId: z.string().uuid(),

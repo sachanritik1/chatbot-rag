@@ -2,9 +2,9 @@ import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { getModelConfig } from "@/config/models";
 
-export type LlmFactoryParams = {
+export interface LlmFactoryParams {
   model?: string | null;
-};
+}
 
 export function createChatLlm({ model }: LlmFactoryParams = {}) {
   const cfg = getModelConfig(model);

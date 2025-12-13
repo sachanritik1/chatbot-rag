@@ -1,10 +1,10 @@
 // Re-export from shared package
 export type { Conversation } from "@chatbot-rag/shared";
 
-export type ConversationTree = {
+export interface ConversationTree {
   conversation: Conversation;
   branches: ConversationTree[];
-};
+}
 
 export interface ConversationsRepository {
   create(userId: string, title: string): Promise<{ id: string } | null>;
