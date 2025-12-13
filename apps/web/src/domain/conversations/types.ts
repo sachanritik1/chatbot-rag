@@ -1,3 +1,4 @@
+import type { Conversation } from "@chatbot-rag/shared";
 // Re-export from shared package
 export type { Conversation } from "@chatbot-rag/shared";
 
