@@ -30,7 +30,7 @@ export default async function AppSideBar() {
   const supabase = await createClient();
 
   const [userResponse, userError] = await tryCatch(supabase.auth.getUser());
-  const userId = userResponse?.data?.user?.id;
+  const userId = userResponse?.data.user?.id;
   if (userError || userResponse.error || !userId) {
     return <div>Error fetching user data</div>;
   }
@@ -105,7 +105,7 @@ export async function Conversations({
   if (conversationsError || conversationsResponse.error) {
     console.error(
       "Error fetching conversations:",
-      conversationsError || conversationsResponse.error,
+      conversationsError ?? conversationsResponse.error,
     );
     return (
       <SidebarContent className="flex-1 overflow-y-auto p-4">
@@ -115,7 +115,13 @@ export async function Conversations({
       </SidebarContent>
     );
   }
-  const conversations = conversationsResponse.data || [];
+
+  const allConversations = conversationsResponse.data;
+
+  // Filter out conversations without messages
+  const conversations = allConversations.filter(
+    (conv) => conv.has_messages === true,
+  );
 
   return (
     <SidebarContent className="flex-1 overflow-y-auto px-3 py-2">

@@ -37,7 +37,9 @@ export class SupabaseChatsRepository implements ChatsRepository {
     model?: string | null,
   ) {
     const supabase = this.supabaseClient || (await createClient());
-    return supabase.from("chats").insert([
+
+    // Insert the message
+    const result = await supabase.from("chats").insert([
       {
         conversation_id: conversationId,
         sender,
@@ -45,6 +47,14 @@ export class SupabaseChatsRepository implements ChatsRepository {
         model: model ?? null,
       },
     ]);
+
+    // Mark conversation as having messages (idempotent - safe to set multiple times)
+    await supabase
+      .from("conversations")
+      .update({ has_messages: true })
+      .eq("id", conversationId);
+
+    return result;
   }
 
   async countByConversation(conversationId: string): Promise<number> {

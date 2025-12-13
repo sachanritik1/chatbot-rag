@@ -32,6 +32,7 @@ export interface Conversation {
   parent_message_id?: string | null;
   branch_created_at?: string | null;
   branch_label?: string | null;
+  has_messages?: boolean; // Tracks if conversation has any messages
 }
 
 export interface ConversationTree {

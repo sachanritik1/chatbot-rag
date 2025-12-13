@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import type { ModelId } from "@/config/models";
-import { createEmptyConversation } from "@/actions/conversations";
 import { deleteMessagesAfter } from "@/actions/chats";
 
 interface ChatPageProps {
@@ -35,6 +34,12 @@ export default function ChatPage({
   const router = useRouter();
   const conversationId = params.conversationId as string | undefined;
 
+  // Track if this was initially an empty conversation (no previous messages)
+  const wasEmptyConversation = useRef(
+    !prevMessages || prevMessages.length === 0,
+  );
+  const hasRefreshedSidebar = useRef(false);
+
   // Get initial model from last message with a valid model
   const lastWithModel = [...(prevMessages ?? [])]
     .reverse()
@@ -50,6 +55,13 @@ export default function ChatPage({
 
   const { messages, sendMessage, status, setMessages } = useChat({
     id: conversationId,
+    onFinish() {
+      // Refresh sidebar after first message completes on an empty conversation
+      if (wasEmptyConversation.current && !hasRefreshedSidebar.current) {
+        hasRefreshedSidebar.current = true;
+        router.refresh();
+      }
+    },
   });
 
   // Only convert prevMessages once on mount, then let useChat manage all messages
@@ -120,6 +132,25 @@ export default function ChatPage({
     shouldRegenerate,
   ]);
 
+  // Block navigation during active streaming
+  useEffect(() => {
+    const isStreaming = status === "streaming" || status === "submitted";
+
+    if (isStreaming) {
+      // Warn user if they try to leave during streaming
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = "";
+      };
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }
+  }, [status]);
+
   // Convert useChat UIMessages to our Message format for display
   const allMessages = messages.map((msg) => {
     // Extract text from parts array
@@ -150,26 +181,19 @@ export default function ChatPage({
   ) => {
     setCurrentModel(model);
 
-    // If no conversation exists, create one first
-    let targetConvId = conversationId;
-    if (!targetConvId) {
-      const result = await createEmptyConversation({
-        title: text.slice(0, 50),
-      });
-      if ("error" in result) {
-        console.error("Failed to create conversation:", result.error);
-        return;
-      }
-      targetConvId = result.conversationId;
-      router.push(`/chat/${targetConvId}`);
+    // conversationId should always exist now
+    // (created by New Conversation button or loaded from URL)
+    if (!conversationId) {
+      console.error("No conversation ID - this shouldn't happen");
+      return;
     }
 
-    // Send message with custom body data
+    // Send message with conversation ID
     await sendMessage(
       { text },
       {
         body: {
-          conversationId: targetConvId,
+          conversationId,
           model,
         },
       },

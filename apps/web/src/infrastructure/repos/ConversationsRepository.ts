@@ -31,12 +31,21 @@ export class SupabaseConversationsRepository
     return !res.error;
   }
 
+  async markAsHavingMessages(conversationId: string): Promise<boolean> {
+    const supabase = this.supabaseClient || (await createClient());
+    const { error } = await supabase
+      .from("conversations")
+      .update({ has_messages: true })
+      .eq("id", conversationId);
+    return !error;
+  }
+
   async listByUserId(userId: string): Promise<Conversation[]> {
     const supabase = this.supabaseClient || (await createClient());
     const res = await supabase
       .from("conversations")
       .select(
-        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label, has_messages",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -76,7 +85,7 @@ export class SupabaseConversationsRepository
     const res = await supabase
       .from("conversations")
       .select(
-        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label, has_messages",
       )
       .eq("id", conversationId)
       .single();
@@ -155,7 +164,7 @@ export class SupabaseConversationsRepository
     const res = await supabase
       .from("conversations")
       .select(
-        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label",
+        "id, user_id, title, created_at, parent_conversation_id, parent_message_id, branch_created_at, branch_label, has_messages",
       )
       .eq("parent_conversation_id", conversationId)
       .order("branch_created_at", { ascending: true });

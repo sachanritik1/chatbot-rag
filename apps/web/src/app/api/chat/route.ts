@@ -9,6 +9,7 @@ import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import { buildChatPrompt } from "@/lib/prompts";
 import { createAPIClient } from "@/utils/supabase/api";
 import { createModelInstance } from "@/lib/llm";
+import { updateConversationTitle } from "@/actions/conversations";
 
 const schema = z.object({
   messages: z.array(
@@ -85,14 +86,39 @@ export async function POST(req: Request) {
       return Response.json({ error: "No message text found" }, { status: 400 });
     }
 
-    // Verify conversation ownership
-    if (conversationId) {
+    // Create conversation server-side if not provided, or verify ownership if provided
+    let actualConversationId = conversationId;
+    let wasCreated = false;
+
+    if (!actualConversationId) {
+      // No conversationId provided - create new conversation server-side
+      const conversationsRepo = new SupabaseConversationsRepository(
+        supabaseClient,
+      );
+
+      // Create with initial title from message (will be updated later)
+      const newConv = await conversationsRepo.create(
+        userId,
+        messageText.slice(0, 50),
+      );
+
+      if (!newConv?.id) {
+        return Response.json(
+          { error: "Failed to create conversation" },
+          { status: 500 },
+        );
+      }
+
+      actualConversationId = newConv.id;
+      wasCreated = true;
+    } else {
+      // Existing conversation - verify ownership
       const conversationsRepo = new SupabaseConversationsRepository(
         supabaseClient,
       );
       const owns = await conversationsRepo.verifyOwnership(
         userId,
-        conversationId,
+        actualConversationId,
       );
       if (!owns) {
         return Response.json(
@@ -110,14 +136,17 @@ export async function POST(req: Request) {
       created_at: string;
     }[] = [];
 
-    if (conversationId) {
-      const recent = await chatsRepo.getRecent(conversationId, 10);
+    if (actualConversationId) {
+      const recent = await chatsRepo.getRecent(actualConversationId, 10);
       history = Array.isArray(recent.data) ? recent.data : [];
     }
 
+    // Check if this is the first message in the conversation
+    const isFirstMessage = history.length === 0;
+
     // Save user message to DB
-    if (conversationId) {
-      await chatsRepo.create(conversationId, messageText, "user", model);
+    if (actualConversationId) {
+      await chatsRepo.create(actualConversationId, messageText, "user", model);
     }
 
     console.log("Building prompt...");
@@ -142,15 +171,56 @@ export async function POST(req: Request) {
       async onFinish({ text }) {
         console.log("Stream finished, saving to DB...");
         // Save assistant response to DB
-        if (conversationId && text.trim().length > 0) {
-          await chatsRepo.create(conversationId, text, "assistant", model);
+        if (actualConversationId && text.trim().length > 0) {
+          await chatsRepo.create(
+            actualConversationId,
+            text,
+            "assistant",
+            model,
+          );
+
+          // If this was the first message, update title if needed
+          if (isFirstMessage) {
+            const conversationsRepo = new SupabaseConversationsRepository(
+              supabaseClient,
+            );
+            const conv = await conversationsRepo.getById(actualConversationId);
+
+            // Generate better title from the user's first message
+            if (conv?.title === "Untitled") {
+              updateConversationTitle({
+                conversationId: actualConversationId,
+                query: messageText,
+              }).catch((err) =>
+                console.error("Failed to update conversation title:", err),
+              );
+            }
+          }
         }
       },
     });
     console.log("streamText created, converting to response...");
 
     const response = result.toUIMessageStreamResponse();
+
+    // If we created a new conversation, include ID in response header
+    if (wasCreated && actualConversationId) {
+      const headers = new Headers(response.headers);
+      headers.set("X-Conversation-Id", actualConversationId);
+
+      console.log(
+        "Returning streaming response with conversation ID:",
+        actualConversationId,
+      );
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headers,
+      });
+    }
+
     console.log("Returning streaming response, status:", response.status);
+
     return response;
   } catch (error) {
     console.error("=== ERROR in chat API ===");
