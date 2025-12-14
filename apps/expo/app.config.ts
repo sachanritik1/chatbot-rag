@@ -2,8 +2,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo",
-  slug: "expo",
+  name: "Chatbot RAG",
+  slug: "chatbot-rag",
   scheme: "expo",
   version: "0.1.0",
   orientation: "portrait",
@@ -30,11 +30,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
   },
-  // extra: {
-  //   eas: {
-  //     projectId: "your-eas-project-id",
-  //   },
-  // },
+  extra: {
+    eas: {
+      projectId: "24333387-6109-498e-a4af-e53b827e78c1",
+    },
+  },
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,

@@ -1,16 +1,18 @@
-// Learn more: https://docs.expo.dev/guides/monorepos/
 const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
-const { FileStore } = require("metro-cache");
-const { withNativewind } = require("nativewind/metro");
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
 
-config.cacheStores = [
-  new FileStore({
-    root: path.join(__dirname, "node_modules", ".cache", "metro"),
-  }),
+const config = getDefaultConfig(projectRoot);
+
+// ✅ EXTEND defaults instead of replacing
+config.watchFolders = [...config.watchFolders, workspaceRoot];
+
+// Optional but safe
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(workspaceRoot, "node_modules"),
 ];
 
-/** @type {import('expo/metro-config').MetroConfig} */
-module.exports = withNativewind(config);
+module.exports = config;

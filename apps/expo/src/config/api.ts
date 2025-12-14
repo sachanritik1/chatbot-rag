@@ -9,4 +9,4 @@ export const API_BASE_URL = __DEV__
   ? Platform.OS === "ios"
     ? "http://localhost:4000" // iOS Simulator - Your Next.js port
     : "https://k20mh897-4000.inc1.devtunnels.ms" // Android Emulator
-  : "https://your-deployed-api.com"; // Production URL
+  : "https://chatbot-rag-kappa.vercel.app"; // Production URL
