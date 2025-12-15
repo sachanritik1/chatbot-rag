@@ -50,7 +50,10 @@ export default function Login() {
   async function signInWithGoogle() {
     try {
       setLoading(true);
-      const redirectTo = makeRedirectUri();
+      const redirectTo = makeRedirectUri({
+        scheme: "chatbot-rag",
+        path: "auth/callback",
+      });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
