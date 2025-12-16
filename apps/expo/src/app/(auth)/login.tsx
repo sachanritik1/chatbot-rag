@@ -17,8 +17,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../lib/supabase";
 import { getThemedColors } from "../../lib/theme";
 
-WebBrowser.maybeCompleteAuthSession();
-
 export default function Login() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
@@ -51,7 +49,7 @@ export default function Login() {
     try {
       setLoading(true);
       const redirectTo = makeRedirectUri({
-        scheme: "chatbot-rag",
+        scheme: "chat",
         path: "auth/callback",
       });
 
@@ -59,35 +57,13 @@ export default function Login() {
         provider: "google",
         options: {
           redirectTo,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: true,
         },
       });
 
       if (error) throw error;
 
-      if (data.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectTo,
-        );
-
-        if (result.type === "success" && result.url) {
-          // Extract tokens from callback URL
-          const url = new URL(result.url);
-          const accessToken = url.searchParams.get("access_token");
-          const refreshToken = url.searchParams.get("refresh_token");
-
-          if (accessToken && refreshToken) {
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-
-            if (sessionError) throw sessionError;
-            router.replace("/(app)/conversations");
-          }
-        }
-      }
+      await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     } catch (error) {
       Alert.alert("Error", (error as Error).message);
     } finally {

@@ -13,8 +13,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "eas:init": "pnpm dlx eas-cli init",
-    "build:preview:android": "pnpm dlx eas-cli build --platform android --profile preview --local",
-    "build:preview:ios": "pnpm dlx eas-cli build --platform ios --profile preview --local",
+    "build:preview:android": "pnpm dlx eas-cli build --platform android --profile preview",
+    "build:preview:ios": "pnpm dlx eas-cli build --platform ios --profile preview",
     "build:production:android": "pnpm dlx eas-cli build --platform android --profile production",
     "build:production:ios": "pnpm dlx eas-cli build --platform ios --profile production",
     "android:check-sdk": "node -e \"if(!process.env.ANDROID_HOME){console.error('ANDROID_HOME not set'); process.exit(1)} else {console.log('ANDROID_HOME=', process.env.ANDROID_HOME)}\""

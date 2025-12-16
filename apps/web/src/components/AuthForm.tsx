@@ -47,7 +47,7 @@ export function AuthForm({
   };
 
   return (
-    <Card className="w-[350px]">
+    <Card className="w-87.5">
       <CardHeader>
         <CardTitle>{mode === "login" ? "Login" : "Sign Up"}</CardTitle>
         <CardDescription>
