@@ -121,7 +121,7 @@ export function ConversationCard({
 
   const styles = StyleSheet.create({
     container: {
-      paddingVertical: 16,
+      paddingVertical: 14,
       paddingHorizontal: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
@@ -137,10 +137,11 @@ export function ConversationCard({
       fontSize: 16,
       fontWeight: "600",
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 6,
+      lineHeight: 22,
     },
     date: {
-      fontSize: 12,
+      fontSize: 13,
       color: colors.textSecondary,
     },
     branchBadge: {

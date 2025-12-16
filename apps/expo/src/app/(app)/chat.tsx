@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { ModelId } from "@chatbot-rag/shared";
@@ -43,6 +44,7 @@ export default function Chat() {
   const [initialLoading, setInitialLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL_ID);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [conversationTitle, setConversationTitle] = useState<string>("New Chat");
   const flatListRef = useRef<FlatList>(null);
   const hasSentBranchMessage = useRef(false);
 
@@ -103,6 +105,19 @@ export default function Chat() {
 
       setInitialLoading(true);
       try {
+        // Fetch conversation title
+        const { data: convData, error: convError } = await supabase
+          .from("conversations")
+          .select("title")
+          .eq("id", conversationId)
+          .single();
+
+        if (convError) throw convError;
+        if (convData?.title) {
+          setConversationTitle(convData.title);
+        }
+
+        // Fetch messages
         const { data, error } = await supabase
           .from("chats")
           .select("*")
@@ -229,7 +244,41 @@ export default function Chat() {
     return null;
   }
 
+  function renderEmptyState() {
+    const suggestions = [
+      "Explain quantum computing in simple terms",
+      "Write a short story about a time traveler",
+      "Help me plan a healthy meal for the week",
+      "Suggest some creative project ideas",
+    ];
+
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyIcon}>💬</Text>
+        <Text style={styles.emptyTitle}>Start a conversation</Text>
+        <Text style={styles.emptySubtitle}>
+          Ask me anything! I'm here to help with information, creative writing, problem-solving, and more.
+        </Text>
+        <View style={styles.suggestionContainer}>
+          {suggestions.map((suggestion, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.suggestionButton}
+              onPress={() => setInputText(suggestion)}
+            >
+              <Text style={styles.suggestionText}>{suggestion}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
   const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.surface,
@@ -239,6 +288,70 @@ export default function Chat() {
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: colors.surface,
+    },
+    header: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    backButton: {
+      padding: 4,
+    },
+    backButtonText: {
+      fontSize: 24,
+      color: colors.text,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: colors.text,
+      flex: 1,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 32,
+    },
+    emptyIcon: {
+      fontSize: 64,
+      marginBottom: 16,
+    },
+    emptyTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    emptySubtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    suggestionContainer: {
+      gap: 8,
+      width: "100%",
+    },
+    suggestionButton: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: "flex-start",
+    },
+    suggestionText: {
+      fontSize: 14,
+      color: colors.text,
+      lineHeight: 20,
     },
     messagesList: {
       padding: 16,
@@ -262,38 +375,41 @@ export default function Chat() {
       borderTopWidth: 1,
       borderTopColor: colors.border,
       backgroundColor: colors.surface,
-      padding: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
       gap: 8,
     },
     modelSelector: {
-      maxHeight: 48,
-      marginBottom: 8,
+      maxHeight: 40,
+      marginBottom: 4,
     },
     modelSelectorContent: {
       flexDirection: "row",
-      gap: 8,
+      gap: 6,
       paddingHorizontal: 2,
     },
     modelButton: {
-      minWidth: 120,
-      padding: 8,
-      borderRadius: 6,
+      minWidth: 100,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
       alignItems: "center",
       backgroundColor: colors.background,
     },
     modelButtonActive: {
-      backgroundColor: resolvedTheme === "dark" ? "#1e3a8a" : "#eff6ff",
+      backgroundColor: resolvedTheme === "dark" ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.08)",
       borderColor: colors.primary,
     },
     modelButtonText: {
-      fontSize: 12,
+      fontSize: 13,
       color: colors.textSecondary,
       fontWeight: "500",
     },
     modelButtonTextActive: {
       color: colors.primary,
+      fontWeight: "600",
     },
     inputRow: {
       flexDirection: "row",
@@ -305,7 +421,7 @@ export default function Chat() {
       backgroundColor: colors.background,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 20,
+      borderRadius: 22,
       paddingHorizontal: 16,
       paddingVertical: 10,
       fontSize: 16,
@@ -314,10 +430,11 @@ export default function Chat() {
     },
     sendButton: {
       backgroundColor: colors.primary,
-      borderRadius: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
+      borderRadius: 22,
+      paddingHorizontal: 22,
+      paddingVertical: 11,
       justifyContent: "center",
+      minHeight: 44,
     },
     sendButtonDisabled: {
       opacity: 0.6,
@@ -331,26 +448,42 @@ export default function Chat() {
 
   if (initialLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {conversationTitle}
+        </Text>
+      </View>
+
       <FlatList
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messagesList}
+        contentContainerStyle={messages.length === 0 ? { flex: 1 } : styles.messagesList}
         ListHeaderComponent={renderListHeader}
         ListFooterComponent={renderListFooter}
+        ListEmptyComponent={renderEmptyState}
         onContentSizeChange={() =>
           flatListRef.current?.scrollToEnd({ animated: true })
         }
@@ -406,5 +539,6 @@ export default function Chat() {
         </View>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

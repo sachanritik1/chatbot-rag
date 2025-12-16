@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import type { Conversation } from "@chatbot-rag/shared";
@@ -117,14 +118,16 @@ export default function Conversations() {
   }
 
   const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     header: {
       backgroundColor: colors.surface,
-      padding: 16,
-      paddingTop: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
@@ -132,84 +135,73 @@ export default function Conversations() {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: "bold",
       color: colors.text,
     },
-    userProfile: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: colors.background,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
+    settingsButton: {
+      width: 40,
+      height: 40,
       borderRadius: 20,
-      maxWidth: 200,
-    },
-    userIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.background,
       justifyContent: "center",
       alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.border,
     },
-    userIconText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "600",
+    settingsIcon: {
+      fontSize: 20,
+      color: colors.text,
     },
-    userEmail: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontWeight: "500",
-      flex: 1,
-    },
-    headerButtons: {
-      flexDirection: "row",
-      gap: 8,
+    searchContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 4,
+      backgroundColor: colors.surface,
     },
     filterContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 16,
-      marginBottom: 8,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
     resultCount: {
       fontSize: 14,
       color: colors.textSecondary,
+      fontWeight: "500",
     },
-    newChatButton: {
-      flex: 1,
+    fab: {
+      position: "absolute",
+      bottom: 24,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: colors.primary,
-      borderRadius: 8,
-      padding: 12,
+      justifyContent: "center",
       alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
     },
-    newChatButtonText: {
+    fabText: {
+      fontSize: 28,
       color: "#fff",
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    signOutButton: {
-      backgroundColor: colors.background,
-      borderRadius: 8,
-      padding: 12,
-      paddingHorizontal: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    signOutButtonText: {
-      color: colors.textSecondary,
-      fontSize: 14,
-      fontWeight: "600",
+      fontWeight: "300",
     },
     list: {
-      paddingTop: 0,
+      paddingTop: 8,
+      paddingBottom: 96,
     },
     emptyState: {
       flex: 1,
@@ -243,86 +235,80 @@ export default function Conversations() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>AI Chat</Text>
-          {userEmail && (
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>Chats</Text>
             <TouchableOpacity
-              style={styles.userProfile}
+              style={styles.settingsButton}
               onPress={() => router.push("/(app)/settings")}
             >
-              <View style={styles.userIcon}>
-                <Text style={styles.userIconText}>
-                  {userEmail.charAt(0).toUpperCase()}
+              <Text style={styles.settingsIcon}>⚙</Text>
+            </TouchableOpacity>
+          </View>
+
+          {conversations.length > 0 && (
+            <>
+              <View style={styles.searchContainer}>
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onClear={() => setSearchQuery("")}
+                />
+              </View>
+              <View style={styles.filterContainer}>
+                <ConversationFilters sortBy={sortBy} onSortChange={setSortBy} />
+                <Text style={styles.resultCount}>
+                  {filteredConversations.length}{" "}
+                  {filteredConversations.length === 1
+                    ? "conversation"
+                    : "conversations"}
                 </Text>
               </View>
-              <Text style={styles.userEmail} numberOfLines={1}>
-                {userEmail}
-              </Text>
-            </TouchableOpacity>
+            </>
           )}
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.newChatButton}
-            onPress={() => router.push("/(app)/chat")}
-          >
-            <Text style={styles.newChatButtonText}>New Chat</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      {conversations.length > 0 && (
-        <>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => setSearchQuery("")}
-          />
-          <View style={styles.filterContainer}>
-            <ConversationFilters sortBy={sortBy} onSortChange={setSortBy} />
-            <Text style={styles.resultCount}>
-              {filteredConversations.length}{" "}
-              {filteredConversations.length === 1
-                ? "conversation"
-                : "conversations"}
+        {conversations.length === 0 && !loading ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>No conversations yet</Text>
+            <Text style={styles.emptyStateText}>
+              Start a new chat to get started
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyStateButton}
+              onPress={() => router.push("/(app)/chat")}
+            >
+              <Text style={styles.emptyStateButtonText}>Start Chatting</Text>
+            </TouchableOpacity>
+          </View>
+        ) : filteredConversations.length === 0 && !loading ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>No results found</Text>
+            <Text style={styles.emptyStateText}>
+              Try adjusting your search or filters
             </Text>
           </View>
-        </>
-      )}
+        ) : (
+          <FlatList
+            data={filteredConversations}
+            renderItem={renderConversation}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+        )}
 
-      {conversations.length === 0 && !loading ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateTitle}>No conversations yet</Text>
-          <Text style={styles.emptyStateText}>
-            Start a new chat to get started
-          </Text>
-          <TouchableOpacity
-            style={styles.emptyStateButton}
-            onPress={() => router.push("/(app)/chat")}
-          >
-            <Text style={styles.emptyStateButtonText}>Start Chatting</Text>
-          </TouchableOpacity>
-        </View>
-      ) : filteredConversations.length === 0 && !loading ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateTitle}>No results found</Text>
-          <Text style={styles.emptyStateText}>
-            Try adjusting your search or filters
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredConversations}
-          renderItem={renderConversation}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
-      )}
-    </View>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push("/(app)/chat")}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }

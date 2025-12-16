@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { supabase } from "../lib/supabase";
@@ -49,16 +50,18 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)/login" />
-        <Stack.Screen name="(auth)/signup" />
-        <Stack.Screen name="auth/callback" />
-        <Stack.Screen name="(app)/chat" />
-        <Stack.Screen name="(app)/conversations" />
-        <Stack.Screen name="(app)/settings" />
-      </Stack>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)/login" />
+          <Stack.Screen name="(auth)/signup" />
+          <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="(app)/chat" />
+          <Stack.Screen name="(app)/conversations" />
+          <Stack.Screen name="(app)/settings" />
+        </Stack>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { makeRedirectUri } from "expo-auth-session";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -72,9 +73,13 @@ export default function Login() {
   }
 
   const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.background,
     },
     content: {
       flex: 1,
@@ -82,32 +87,33 @@ export default function Login() {
       justifyContent: "center",
     },
     title: {
-      fontSize: 32,
+      fontSize: 34,
       fontWeight: "bold",
       color: colors.text,
       marginBottom: 8,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 17,
       color: colors.textSecondary,
-      marginBottom: 32,
+      marginBottom: 40,
     },
     form: {
-      gap: 16,
+      gap: 12,
     },
     input: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      padding: 16,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
       fontSize: 16,
       color: colors.text,
     },
     button: {
       backgroundColor: colors.primary,
-      borderRadius: 8,
-      padding: 16,
+      borderRadius: 12,
+      paddingVertical: 16,
       alignItems: "center",
       marginTop: 8,
     },
@@ -122,7 +128,7 @@ export default function Login() {
     divider: {
       flexDirection: "row",
       alignItems: "center",
-      marginVertical: 24,
+      marginVertical: 28,
     },
     dividerLine: {
       flex: 1,
@@ -131,17 +137,17 @@ export default function Login() {
     },
     dividerText: {
       marginHorizontal: 16,
-      fontSize: 14,
+      fontSize: 13,
       color: colors.textSecondary,
-      fontWeight: "500",
+      fontWeight: "600",
     },
     googleButton: {
       flexDirection: "row",
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      padding: 16,
+      borderRadius: 12,
+      paddingVertical: 14,
       alignItems: "center",
       justifyContent: "center",
       gap: 12,
@@ -171,10 +177,11 @@ export default function Login() {
   });
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+      >
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
@@ -237,6 +244,7 @@ export default function Login() {
           </TouchableOpacity>
         </View>
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -76,27 +77,65 @@ export default function Settings() {
   };
 
   const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
+    header: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    backButton: {
+      padding: 4,
+    },
+    backButtonText: {
+      fontSize: 24,
+      color: colors.text,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+    },
     section: {
       padding: 16,
-      paddingBottom: 8,
+      paddingBottom: 12,
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 12,
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: 8,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
     },
     card: {
       backgroundColor: colors.surface,
-      borderRadius: 12,
-      padding: 16,
+      borderRadius: 10,
       borderWidth: 1,
       borderColor: colors.border,
-      gap: 12,
+    },
+    cardRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    cardRowLast: {
+      borderBottomWidth: 0,
     },
     row: {
       flexDirection: "row",
@@ -118,12 +157,13 @@ export default function Settings() {
       marginTop: -8,
     },
     dangerButton: {
-      marginTop: 12,
-      backgroundColor: colors.dangerBg,
-      borderRadius: 12,
-      padding: 16,
+      marginTop: 16,
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
       borderWidth: 1,
-      borderColor: colors.dangerBorder,
+      borderColor: colors.danger,
     },
     dangerButtonText: {
       fontSize: 16,
@@ -131,25 +171,22 @@ export default function Settings() {
       color: colors.danger,
       textAlign: "center",
     },
-    modelScrollView: {
-      maxHeight: 300,
-    },
-    modelList: {
-      gap: 8,
+    modelCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: 8,
     },
     modelOption: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: 14,
-      backgroundColor: colors.background,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
     },
     modelOptionActive: {
-      backgroundColor: resolvedTheme === "dark" ? "#1e3a8a" : "#eff6ff",
-      borderColor: colors.primary,
+      backgroundColor: resolvedTheme === "dark" ? "rgba(59, 130, 246, 0.1)" : "rgba(59, 130, 246, 0.05)",
     },
     modelOptionText: {
       fontSize: 15,
@@ -174,47 +211,49 @@ export default function Settings() {
   });
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Account Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{userEmail ?? "Not available"}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.dangerButton} onPress={handleSignOut}>
-          <Text style={styles.dangerButtonText}>Sign Out</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Settings</Text>
       </View>
 
-      {/* Appearance Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Theme</Text>
-            <ThemeToggle />
+      <ScrollView style={styles.container}>
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.card}>
+            <View style={[styles.cardRow, styles.cardRowLast]}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value} numberOfLines={1}>{userEmail ?? "Not available"}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.dangerButton} onPress={handleSignOut}>
+            <Text style={styles.dangerButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Appearance Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <View style={styles.card}>
+            <View style={[styles.cardRow, styles.cardRowLast]}>
+              <Text style={styles.label}>Theme</Text>
+              <ThemeToggle />
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Model Preferences Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Model Preferences</Text>
-        <View style={styles.card}>
-          <Text style={styles.label}>Default Model</Text>
-          <Text style={styles.hint}>
-            This model will be selected by default for new conversations
-          </Text>
-
-          <ScrollView
-            style={styles.modelScrollView}
-            contentContainerStyle={styles.modelList}
-          >
-            {MODEL_OPTIONS.map((model) => (
+        {/* Model Preferences Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Default Model</Text>
+          <View style={styles.modelCard}>
+            {MODEL_OPTIONS.map((model, index) => (
               <TouchableOpacity
                 key={model.value}
                 style={[
@@ -237,24 +276,24 @@ export default function Settings() {
                 )}
               </TouchableOpacity>
             ))}
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* About Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Version</Text>
-            <Text style={styles.value}>1.0.0</Text>
           </View>
         </View>
-      </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Chatbot RAG • Powered by Gemini</Text>
-      </View>
-    </ScrollView>
+        {/* About Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.card}>
+            <View style={[styles.cardRow, styles.cardRowLast]}>
+              <Text style={styles.label}>Version</Text>
+              <Text style={styles.value}>1.0.0</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Chatbot RAG • Powered by Gemini</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
