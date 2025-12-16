@@ -16,9 +16,9 @@ import type { SortOption } from "../../components/conversations/ConversationFilt
 import { ConversationCard } from "../../components/conversations/ConversationCard";
 import { ConversationFilters } from "../../components/conversations/ConversationFilters";
 import { SearchBar } from "../../components/conversations/SearchBar";
+import { useTheme } from "../../contexts/ThemeContext";
 import { conversationsApi } from "../../lib/api";
 import { supabase } from "../../lib/supabase";
-import { useTheme } from "../../contexts/ThemeContext";
 import { getThemedColors } from "../../lib/theme";
 
 export default function Conversations() {
@@ -64,15 +64,6 @@ export default function Conversations() {
   useEffect(() => {
     void loadConversations();
   }, [loadConversations, router]);
-
-  async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else {
-      router.replace("/(auth)/login");
-    }
-  }
 
   async function onRefresh() {
     setRefreshing(true);
@@ -278,9 +269,6 @@ export default function Conversations() {
             onPress={() => router.push("/(app)/chat")}
           >
             <Text style={styles.newChatButtonText}>New Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </View>

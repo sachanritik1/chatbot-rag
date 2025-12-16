@@ -1,9 +1,9 @@
 import {
-  View,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  Text,
-  StyleSheet,
+  View,
 } from "react-native";
 
 import { useTheme } from "../../contexts/ThemeContext";
@@ -25,8 +25,8 @@ export function SearchBar({ value, onChangeText, onClear }: SearchBarProps) {
       alignItems: "center",
       backgroundColor: colors.background,
       borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       marginHorizontal: 16,
       marginTop: 8,
       marginBottom: 12,
