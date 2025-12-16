@@ -29,6 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#1F104A",
     },
     edgeToEdgeEnabled: true,
+    softwareKeyboardLayoutMode: "resize",
   },
   extra: {
     eas: {
