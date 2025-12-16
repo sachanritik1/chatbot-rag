@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 
 import type { ModelId } from "@chatbot-rag/shared";
@@ -93,19 +94,21 @@ export function MessageActions({
     <>
       <View style={styles.container}>
         <TouchableOpacity onPress={handleCopy} style={styles.button}>
-          <Text style={styles.buttonText}>
-            {copiedFeedback ? "✓ Copied" : "Copy"}
-          </Text>
+          <Ionicons
+            name={copiedFeedback ? "checkmark" : "copy-outline"}
+            size={18}
+            color="#6b7280"
+          />
         </TouchableOpacity>
 
         {message.role === "user" && (
           <TouchableOpacity onPress={handleEditPress} style={styles.button}>
-            <Text style={styles.buttonText}>Edit</Text>
+            <Ionicons name="pencil-outline" size={18} color="#6b7280" />
           </TouchableOpacity>
         )}
 
         <TouchableOpacity onPress={handleRetryPress} style={styles.button}>
-          <Text style={styles.buttonText}>Retry</Text>
+          <Ionicons name="refresh-outline" size={18} color="#6b7280" />
         </TouchableOpacity>
 
         {onBranch && <BranchButton onBranch={onBranch} />}
@@ -191,20 +194,17 @@ export function MessageActions({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
     marginTop: 8,
     flexWrap: "wrap",
   },
   button: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "rgba(0, 0, 0, 0.05)",
-  },
-  buttonText: {
-    fontSize: 12,
-    color: "#6b7280",
-    fontWeight: "500",
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalOverlay: {
     flex: 1,

@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -113,7 +114,7 @@ export default function Chat() {
           .single();
 
         if (convError) throw convError;
-        if (convData?.title) {
+        if (typeof convData.title === "string") {
           setConversationTitle(convData.title);
         }
 
@@ -254,7 +255,7 @@ export default function Chat() {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>💬</Text>
+        <Ionicons name="chatbubbles-outline" size={64} color={colors.textSecondary} />
         <Text style={styles.emptyTitle}>Start a conversation</Text>
         <Text style={styles.emptySubtitle}>
           Ask me anything! I'm here to help with information, creative writing, problem-solving, and more.
@@ -302,10 +303,6 @@ export default function Chat() {
     backButton: {
       padding: 4,
     },
-    backButtonText: {
-      fontSize: 24,
-      color: colors.text,
-    },
     headerTitle: {
       fontSize: 18,
       fontWeight: "600",
@@ -317,10 +314,7 @@ export default function Chat() {
       justifyContent: "center",
       alignItems: "center",
       padding: 32,
-    },
-    emptyIcon: {
-      fontSize: 64,
-      marginBottom: 16,
+      gap: 16,
     },
     emptyTitle: {
       fontSize: 24,
@@ -468,7 +462,7 @@ export default function Chat() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {conversationTitle}

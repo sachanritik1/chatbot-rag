@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import type { Conversation } from "@chatbot-rag/shared";
 
@@ -31,7 +32,6 @@ export default function Conversations() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const loadConversations = useCallback(
     async function () {
@@ -44,8 +44,6 @@ export default function Conversations() {
           router.replace("/(auth)/login");
           return;
         }
-
-        setUserEmail(user.email ?? null);
 
         // Use API client to list conversations (filters has_messages = true)
         const data = await conversationsApi.list();
@@ -153,10 +151,6 @@ export default function Conversations() {
       borderWidth: 1,
       borderColor: colors.border,
     },
-    settingsIcon: {
-      fontSize: 20,
-      color: colors.text,
-    },
     searchContainer: {
       paddingHorizontal: 16,
       paddingTop: 8,
@@ -193,11 +187,6 @@ export default function Conversations() {
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 8,
-    },
-    fabText: {
-      fontSize: 28,
-      color: "#fff",
-      fontWeight: "300",
     },
     list: {
       paddingTop: 8,
@@ -244,7 +233,7 @@ export default function Conversations() {
               style={styles.settingsButton}
               onPress={() => router.push("/(app)/settings")}
             >
-              <Text style={styles.settingsIcon}>⚙</Text>
+              <Ionicons name="settings-outline" size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -306,7 +295,7 @@ export default function Conversations() {
           style={styles.fab}
           onPress={() => router.push("/(app)/chat")}
         >
-          <Text style={styles.fabText}>+</Text>
+          <Ionicons name="add" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>

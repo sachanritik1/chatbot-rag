@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import type { ModelId } from "@chatbot-rag/shared";
 
@@ -40,7 +41,7 @@ export function BranchButton({ onBranch }: BranchButtonProps) {
         onPress={() => setShowModelSelector(true)}
         style={styles.branchButton}
       >
-        <Text style={styles.branchButtonText}>🌿 Branch</Text>
+        <Ionicons name="git-branch-outline" size={18} color="#6b7280" />
       </TouchableOpacity>
 
       <Modal
@@ -94,15 +95,12 @@ export function BranchButton({ onBranch }: BranchButtonProps) {
 
 const styles = StyleSheet.create({
   branchButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: "#f3f4f6",
-  },
-  branchButtonText: {
-    fontSize: 13,
-    color: "#374151",
-    fontWeight: "500",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalOverlay: {
     flex: 1,

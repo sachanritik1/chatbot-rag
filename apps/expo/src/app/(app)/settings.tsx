@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -97,10 +98,6 @@ export default function Settings() {
     },
     backButton: {
       padding: 4,
-    },
-    backButtonText: {
-      fontSize: 24,
-      color: colors.text,
     },
     headerTitle: {
       fontSize: 20,
@@ -217,7 +214,7 @@ export default function Settings() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
@@ -253,7 +250,7 @@ export default function Settings() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Default Model</Text>
           <View style={styles.modelCard}>
-            {MODEL_OPTIONS.map((model, index) => (
+            {MODEL_OPTIONS.map((model) => (
               <TouchableOpacity
                 key={model.value}
                 style={[
