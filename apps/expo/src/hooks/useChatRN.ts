@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetch as streamingFetch } from "react-native-fetch-api";
 
 import type { Message, ModelId } from "@chatbot-rag/shared";
+import {
+  findLastUserMessageBeforeIndex,
+  getMessageIdBeforeIndex,
+  parseSSETextDeltas,
+} from "@chatbot-rag/shared";
 
 import { API_BASE_URL } from "../config/api";
 import { branchesApi, messagesApi } from "../lib/api";
@@ -28,11 +33,16 @@ export function useChatRN({
   onBranchCreated,
 }: UseChatRNOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const messagesRef = useRef<Message[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "streaming">(
     "idle",
   );
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const sendMessage = async (content: string, model: string) => {
     setStatus("loading");
@@ -62,6 +72,8 @@ export function useChatRN({
       };
       setMessages((prev) => [...prev, userMsg]);
 
+      const history = [...messagesRef.current, userMsg];
+
       // Make API request with streaming fetch
       const res = await streamingFetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
@@ -70,16 +82,10 @@ export function useChatRN({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [
-            ...messages.map((m) => ({
-              role: m.role,
-              parts: [{ type: "text", text: m.content }],
-            })),
-            {
-              role: "user",
-              parts: [{ type: "text", text: content }],
-            },
-          ],
+          messages: history.map((m) => ({
+            role: m.role,
+            parts: [{ type: "text", text: m.content }],
+          })),
           conversationId,
           model,
         }),
@@ -96,32 +102,8 @@ export function useChatRN({
       const text = await res.text();
       console.log("📄 Got full response:", text.slice(0, 200));
 
-      // Parse Server-Sent Events format
-      const lines = text.split("\n");
-      let assistantMessage = "";
+      const assistantMessage = parseSSETextDeltas(text);
       const assistantMsgId = (Date.now() + 1).toString();
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-
-        // SSE format: "data: {...}"
-        if (line.startsWith("data: ")) {
-          const jsonStr = line.slice(6); // Remove "data: " prefix
-          try {
-            const parsed = JSON.parse(jsonStr) as {
-              type?: string;
-              delta?: string;
-            };
-
-            // Handle different event types
-            if (parsed.type === "text-delta" && parsed.delta) {
-              assistantMessage += parsed.delta;
-            }
-          } catch {
-            // Ignore parse errors for non-JSON lines
-          }
-        }
-      }
 
       console.log("✅ Parsed message length:", assistantMessage.length);
 
@@ -166,25 +148,19 @@ export function useChatRN({
     if (!conversationId) return;
 
     try {
-      // Get the message before the one we're retrying
-      const messageBeforeIndex = messageIndex - 1;
-      if (messageBeforeIndex >= 0) {
-        const messageBeforeId = messages[messageBeforeIndex]?.id;
-        if (messageBeforeId) {
-          // Delete messages after this point
-          await messagesApi.deleteAfter(conversationId, messageBeforeId);
-        }
+      const messageBeforeId = getMessageIdBeforeIndex(messages, messageIndex);
+      if (messageBeforeId) {
+        await messagesApi.deleteAfter(conversationId, messageBeforeId);
       }
 
       // Remove messages from UI after and including the current one
       const newMessages = messages.slice(0, messageIndex);
       setMessages(newMessages);
 
-      // Get the user message to retry
-      const userMessage = messages
-        .slice(0, messageIndex + 1)
-        .filter((m) => m.role === "user")
-        .pop();
+      const userMessage = findLastUserMessageBeforeIndex(
+        messages,
+        messageIndex,
+      );
 
       if (userMessage) {
         // Resend with new model
@@ -206,14 +182,9 @@ export function useChatRN({
     if (!conversationId) return;
 
     try {
-      // Get the message before the one we're editing
-      const messageBeforeIndex = messageIndex - 1;
-      if (messageBeforeIndex >= 0) {
-        const messageBeforeId = messages[messageBeforeIndex]?.id;
-        if (messageBeforeId) {
-          // Delete messages after this point
-          await messagesApi.deleteAfter(conversationId, messageBeforeId);
-        }
+      const messageBeforeId = getMessageIdBeforeIndex(messages, messageIndex);
+      if (messageBeforeId) {
+        await messagesApi.deleteAfter(conversationId, messageBeforeId);
       }
 
       // Remove messages from UI after and including the current one

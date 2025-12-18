@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MessageSquareText, ShieldCheck, Zap, FileText } from "lucide-react";
-import { UserService } from "@/domain/users/UserService";
-import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { UserService } from "@chatbot-rag/domain/users";
+import { createServerRepositories } from "@/utils/repositories";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -12,15 +12,16 @@ export const metadata: Metadata = {
 };
 
 export default async function LandingPage() {
-  const userService = new UserService(new SupabaseUsersRepository());
+  const { users: usersRepo } = await createServerRepositories();
+  const userService = new UserService(usersRepo);
   const current = await userService.requireCurrentUser().catch(() => null);
   if (current?.id) redirect("/chat");
   return (
-    <main className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:px-6 sm:py-16">
+    <main className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 py-12 sm:px-6 sm:py-16">
       {/* Decorative background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-[-10%] left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-400/40 via-blue-300/10 to-transparent blur-3xl dark:from-blue-600/30 dark:via-blue-500/10" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-violet-400/30 via-violet-300/10 to-transparent blur-3xl dark:from-violet-600/30 dark:via-violet-500/10" />
+        <div className="absolute top-[-10%] left-1/2 h-112 w-md -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-400/40 via-blue-300/10 to-transparent blur-3xl dark:from-blue-600/30 dark:via-blue-500/10" />
+        <div className="absolute right-[-10%] bottom-[-10%] h-104 w-104 rounded-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-violet-400/30 via-violet-300/10 to-transparent blur-3xl dark:from-violet-600/30 dark:via-violet-500/10" />
       </div>
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-8 md:grid-cols-2 md:gap-12">
@@ -30,7 +31,7 @@ export default async function LandingPage() {
             <Zap className="h-3.5 w-3.5 text-yellow-500" />
             Streaming answers in real time
           </span>
-          <h1 className="mt-4 bg-gradient-to-b from-black to-gray-700 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-5xl md:text-6xl dark:from-white dark:to-gray-300">
+          <h1 className="mt-4 bg-linear-to-b from-black to-gray-700 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-5xl md:text-6xl dark:from-white dark:to-gray-300">
             Your AI chat companion
           </h1>
           <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
@@ -95,7 +96,7 @@ export default async function LandingPage() {
         {/* Preview card */}
         <div>
           <div className="relative mx-auto w-full max-w-lg">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-blue-500/30 via-violet-500/20 to-emerald-400/20 blur-2xl" />
+            <div className="absolute -inset-1 rounded-2xl bg-linear-to-tr from-blue-500/30 via-violet-500/20 to-emerald-400/20 blur-2xl" />
             <div className="relative rounded-2xl border border-white/40 bg-white/70 p-5 shadow-xl backdrop-blur dark:border-white/10 dark:bg-white/5">
               <div className="mb-4 flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-400" />

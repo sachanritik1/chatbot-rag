@@ -10,7 +10,7 @@ const config = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    typography: (theme) => ({
+    typography: (/** @type {(path: string) => unknown} */ theme) => ({
       DEFAULT: {
         css: {
           ul: {

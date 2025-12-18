@@ -1,4 +1,4 @@
-import type { ChatHistory } from "@/domain/chat/models";
+import type { ChatHistory } from "@chatbot-rag/domain/chat";
 
 export type SenderRole = "user" | "assistant";
 

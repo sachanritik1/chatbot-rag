@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
-import { ConversationService } from "@/domain/conversations/ConversationService";
-import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
-import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { ConversationService } from "@chatbot-rag/domain/conversations";
+import { createServerRepositories } from "@/utils/repositories";
 import { tryCatch } from "@/utils/try-catch";
 import {
   Sidebar,
@@ -17,7 +16,7 @@ import ConversationCard from "./ConversationCard";
 import NewConversationButton from "./NewConversationButton";
 import ThemeToggleWrapper from "./ThemeToggleWrapper";
 import { MessageSquare, LogOut } from "lucide-react";
-import type { Conversation } from "@/domain/conversations/types";
+import type { Conversation } from "@chatbot-rag/domain/conversations";
 
 const logout = async () => {
   "use server";
@@ -36,12 +35,11 @@ export default async function AppSideBar() {
   }
 
   const conversationsPromise = (async () => {
-    const service = new ConversationService(
-      new SupabaseConversationsRepository(),
-      new SupabaseChatsRepository(),
-    );
+    const { conversations: convRepo, chats: chatsRepo } =
+      await createServerRepositories();
+    const service = new ConversationService(convRepo, chatsRepo);
     const list = await service.listForUser(userId);
-     
+
     return { data: list } as PostgrestSingleResponse<Conversation[]>;
   })();
 

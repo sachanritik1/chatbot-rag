@@ -3,7 +3,6 @@
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createEmptyConversation } from "@/actions/conversations";
 import { Button } from "@/components/ui/button";
 
 const NewConversationButton = () => {
@@ -15,15 +14,19 @@ const NewConversationButton = () => {
 
     try {
       // Create empty conversation with "Untitled" placeholder
-      const result = await createEmptyConversation({
-        title: "Untitled",
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Untitled" }),
       });
 
-      if ("error" in result) {
-        console.error("Failed to create conversation:", result.error);
+      if (!response.ok) {
+        console.error("Failed to create conversation");
         setIsCreating(false);
         return;
       }
+
+      const result = (await response.json()) as { conversationId: string };
 
       // Navigate to the new empty conversation
       router.push(`/chat/${result.conversationId}`);

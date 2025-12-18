@@ -1,15 +1,19 @@
-import { ChatService } from "@/domain/chat/ChatService";
-import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
-import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { ChatService } from "@chatbot-rag/domain/chat";
+import {
+  SupabaseConversationsRepository,
+  SupabaseChatsRepository,
+} from "@chatbot-rag/repositories";
 import { buildChatPrompt } from "@/lib/prompts";
 import { GeminiChatClient } from "@/infrastructure/llm/GeminiChatCleint";
 import type { ModelId } from "@/config/models";
+import { createClient } from "@/utils/supabase/server";
 
-export function buildChatService(model?: ModelId) {
+export async function buildChatService(model?: ModelId) {
+  const supabase = await createClient();
   return new ChatService({
     llm: new GeminiChatClient(model),
-    chats: new SupabaseChatsRepository(),
-    conversations: new SupabaseConversationsRepository(),
+    chats: new SupabaseChatsRepository(supabase),
+    conversations: new SupabaseConversationsRepository(supabase),
     buildPrompt: buildChatPrompt,
   });
 }

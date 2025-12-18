@@ -9,7 +9,6 @@ import { MessageList } from "@/components/MessageList";
 import { ChatInputForm } from "@/components/ChatInputForm";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import type { ModelId } from "@/config/models";
-import { deleteMessagesAfter } from "@/actions/chats";
 
 interface ChatPageProps {
   title?: string;
@@ -229,9 +228,10 @@ export default function ChatPage({
       const messageBeforeId = allMessages[messageBeforeIndex]?.id;
       if (messageBeforeId) {
         // Delete messages from DB after this point
-        await deleteMessagesAfter({
-          conversationId,
-          messageId: messageBeforeId,
+        await fetch(`/api/conversations/${conversationId}/messages`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageId: messageBeforeId }),
         });
       }
     }
@@ -266,9 +266,10 @@ export default function ChatPage({
       const messageBeforeId = allMessages[messageBeforeIndex]?.id;
       if (messageBeforeId) {
         // Delete messages from DB after this point
-        await deleteMessagesAfter({
-          conversationId,
-          messageId: messageBeforeId,
+        await fetch(`/api/conversations/${conversationId}/messages`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageId: messageBeforeId }),
         });
       }
     }

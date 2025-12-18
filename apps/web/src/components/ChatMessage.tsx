@@ -103,7 +103,7 @@ export function ChatMessage({
                 <Textarea
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  className="min-h-[100px] border-gray-300 bg-white text-sm text-gray-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-gray-100"
+                  className="min-h-25 border-gray-300 bg-white text-sm text-gray-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-gray-100"
                   autoFocus
                 />
                 <div className="flex justify-end gap-2">
@@ -135,6 +135,14 @@ export function ChatMessage({
                   components={{
                     code(props) {
                       const { children, className, ...rest } = props;
+                      const {
+                        ref: _ref,
+                        node: _node,
+                        ...restProps
+                      } = rest as unknown as {
+                        ref?: unknown;
+                        node?: unknown;
+                      } & Record<string, unknown>;
                       const match = /language-(\w+)/.exec(className ?? "");
 
                       if (
@@ -153,17 +161,25 @@ export function ChatMessage({
                       }
 
                       return (
-                        <code className={className} {...rest}>
+                        <code className={className} {...restProps}>
                           {children}
                         </code>
                       );
                     },
                     ul(props) {
                       const { children, ...rest } = props;
+                      const {
+                        ref: _ref,
+                        node: _node,
+                        ...restProps
+                      } = rest as unknown as {
+                        ref?: unknown;
+                        node?: unknown;
+                      } & Record<string, unknown>;
                       return (
                         <ul
                           className="mt-1 mb-4 list-disc space-y-1 pl-6 text-gray-800 dark:text-gray-200"
-                          {...rest}
+                          {...restProps}
                         >
                           {children}
                         </ul>
@@ -171,10 +187,18 @@ export function ChatMessage({
                     },
                     ol(props) {
                       const { children, ...rest } = props;
+                      const {
+                        ref: _ref,
+                        node: _node,
+                        ...restProps
+                      } = rest as unknown as {
+                        ref?: unknown;
+                        node?: unknown;
+                      } & Record<string, unknown>;
                       return (
                         <ol
                           className="mt-1 mb-4 list-decimal space-y-1 pl-6 text-gray-800 dark:text-gray-200"
-                          {...rest}
+                          {...restProps}
                         >
                           {children}
                         </ol>
@@ -182,10 +206,18 @@ export function ChatMessage({
                     },
                     li(props) {
                       const { children, ...rest } = props;
+                      const {
+                        ref: _ref,
+                        node: _node,
+                        ...restProps
+                      } = rest as unknown as {
+                        ref?: unknown;
+                        node?: unknown;
+                      } & Record<string, unknown>;
                       return (
                         <li
                           className="pl-1 marker:text-gray-500 dark:marker:text-gray-400"
-                          {...rest}
+                          {...restProps}
                         >
                           {children}
                         </li>

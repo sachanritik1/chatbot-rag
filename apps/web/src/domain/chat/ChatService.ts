@@ -3,7 +3,7 @@ import type {
   ChatsRepository,
   ConversationsRepository,
   BuildPromptFn,
-} from "@/domain/chat/types";
+} from "@chatbot-rag/domain/chat";
 
 interface SendMessageInput {
   userId: string;

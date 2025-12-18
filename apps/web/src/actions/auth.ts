@@ -4,8 +4,8 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
-import { AuthService } from "@/domain/auth/AuthService";
-import { SupabaseAuthRepository } from "@/infrastructure/repos/AuthRepository";
+import { AuthService } from "@chatbot-rag/domain/auth";
+import { createServerRepositories } from "@/utils/repositories";
 import { z } from "zod";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { env } from "@/env";
@@ -16,7 +16,8 @@ const loginSchema = z.object({
 });
 
 export async function login(formData: FormData) {
-  const auth = new AuthService(new SupabaseAuthRepository());
+  const { auth: authRepo } = await createServerRepositories();
+  const auth = new AuthService(authRepo);
 
   const data = {
     email: formData.get("email"),
@@ -35,7 +36,8 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const auth = new AuthService(new SupabaseAuthRepository());
+  const { auth: authRepo } = await createServerRepositories();
+  const auth = new AuthService(authRepo);
 
   const data = {
     email: formData.get("email"),

@@ -1,4 +1,4 @@
-import type { AuthRepository, Credentials } from "@/domain/auth/types";
+import type { AuthRepository, Credentials } from "@chatbot-rag/domain/auth";
 
 export class AuthService {
   constructor(private readonly authRepo: AuthRepository) {}

@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteConversation } from "@/actions/conversations";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -61,19 +60,29 @@ const ConversationCard = ({
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-destructive h-6 w-6 shrink-0 opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
             setIsDeleting(true);
-            void deleteConversation({ conversationId: conversation.id })
-              .then(() => {
+
+            try {
+              const response = await fetch("/api/conversations", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ conversationId: conversation.id }),
+              });
+
+              if (response.ok) {
                 // If we're on the deleted conversation's page, redirect to root
                 if (currentConversationId === conversation.id) {
                   router.push("/chat");
                 }
-              })
-              .finally(() => {
-                setIsDeleting(false);
-              });
+                router.refresh();
+              }
+            } catch (error) {
+              console.error("Error deleting conversation:", error);
+            } finally {
+              setIsDeleting(false);
+            }
           }}
           disabled={isDeleting}
         >

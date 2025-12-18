@@ -35,6 +35,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "24333387-6109-498e-a4af-e53b827e78c1",
     },
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   },
   experiments: {
     tsconfigPaths: true,

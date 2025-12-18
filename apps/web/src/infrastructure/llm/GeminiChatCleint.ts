@@ -1,6 +1,6 @@
 import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
-import type { LlmClient } from "@/domain/chat/types";
+import type { LlmClient } from "@chatbot-rag/domain/chat";
 import { getModelConfig } from "@/config/models";
 import type { ModelId } from "@/config/models";
 

@@ -1,4 +1,4 @@
-import type { BuildPromptFn } from "@/domain/chat/types";
+import type { BuildPromptFn } from "@chatbot-rag/domain/chat";
 
 export const buildChatPrompt: BuildPromptFn = ({ history, question }) => {
   const formatMessages = (

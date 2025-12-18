@@ -3,7 +3,7 @@ import type {
   ConversationsRepository,
   Conversation,
   ConversationTree,
-} from "@/domain/conversations/types";
+} from "@chatbot-rag/domain/conversations";
 import { createClient } from "@/utils/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

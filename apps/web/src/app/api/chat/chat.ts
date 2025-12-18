@@ -9,7 +9,7 @@ export const chat = async (
   model: ModelId = DEFAULT_MODEL_ID,
 ) => {
   // Reuse ChatService but collect the streaming output into a string
-  const service = buildChatService(model);
+  const service = await buildChatService(model);
   const stream = await service.sendMessage({
     userId,
     conversationId,

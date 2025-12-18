@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { createAPIClient } from "@/utils/supabase/api";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { UsersRepository, UserIdentity } from "@/domain/users/types";
+import type { UsersRepository, UserIdentity } from "@chatbot-rag/domain/users";
 
 export class SupabaseUsersRepository implements UsersRepository {
   constructor(private supabaseClient?: SupabaseClient) {}

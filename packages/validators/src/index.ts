@@ -1,8 +1,49 @@
-import { z } from "zod/v4";
+// Conversation validators
+export {
+  createEmptyConversationSchema,
+  createConversationSchema,
+  deleteConversationSchema,
+  updateConversationTitleSchema,
+  type CreateEmptyConversationInput,
+  type CreateConversationInput,
+  type DeleteConversationInput,
+  type UpdateConversationTitleInput,
+} from "./conversations";
 
-export const unused = z.string().describe(
-  `This lib is currently not used as we use drizzle-zod for simple schemas
-   But as your application grows and you need other validators to share
-   with back and frontend, you can put them in here
-  `,
-);
+// Message validators
+export {
+  deleteAfterMessageSchema,
+  getPaginatedMessagesSchema,
+  type DeleteAfterMessageInput,
+  type GetPaginatedMessagesInput,
+} from "./messages";
+
+// Branch validators
+export {
+  createBranchSchema,
+  type CreateBranchInput,
+} from "./branches";
+
+// Chat validators
+export {
+  chatRequestSchema,
+  generateTitleSchema,
+  type ChatRequestInput,
+  type GenerateTitleInput,
+} from "./chat";
+
+// Auth validators
+export {
+  loginSchema,
+  signupSchema,
+  type LoginInput,
+  type SignupInput,
+} from "./auth";
+
+// Common validators
+export {
+  paginationSchema,
+  uuidSchema,
+  idSchema,
+  type PaginationInput,
+} from "./common";

@@ -1,15 +1,15 @@
 import { streamText } from "ai";
 import { z } from "zod";
 
-import { UserService } from "@/domain/users/UserService";
-import { createAPIUsersRepository } from "@/infrastructure/repos/UsersRepository";
-import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
-import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { UserService } from "@chatbot-rag/domain/users";
+import { createAPIUsersRepository } from "@/utils/repositories";
+import { SupabaseConversationsRepository } from "@/utils/repositories";
+import { SupabaseChatsRepository } from "@/utils/repositories";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import { buildChatPrompt } from "@/lib/prompts";
 import { createAPIClient } from "@/utils/supabase/api";
 import { createModelInstance } from "@/lib/llm";
-import { updateConversationTitle } from "@/actions/conversations";
+import { generateTitle } from "@/lib/llm";
 
 const schema = z.object({
   messages: z.array(
@@ -20,7 +20,7 @@ const schema = z.object({
         z.object({
           type: z.string(),
           text: z.string().optional(),
-        }),
+        }),       
       ),
     }),
   ),
@@ -188,12 +188,13 @@ export async function POST(req: Request) {
 
             // Generate better title from the user's first message
             if (conv?.title === "Untitled") {
-              updateConversationTitle({
-                conversationId: actualConversationId,
-                query: messageText,
-              }).catch((err) =>
-                console.error("Failed to update conversation title:", err),
-              );
+              generateTitle(messageText)
+                .then((title) =>
+                  conversationsRepo.updateTitle(actualConversationId, title),
+                )
+                .catch((err) =>
+                  console.error("Failed to update conversation title:", err),
+                );
             }
           }
         }

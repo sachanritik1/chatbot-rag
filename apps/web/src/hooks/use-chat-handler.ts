@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createEmptyConversation } from "@/actions/conversations";
 import type { Message } from "@/components/MessageList";
 import type { ModelId } from "@/config/models";
 import { DEFAULT_MODEL_ID } from "@/config/models";
@@ -93,9 +92,23 @@ export function useChatHandler(
         title = data.title ?? title;
       }
 
-      const result = await createEmptyConversation({ title });
-      if (result.error ?? !result.conversationId) {
-        console.error("Error creating conversation:", result.error);
+      const createResponse = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+
+      if (!createResponse.ok) {
+        console.error("Error creating conversation");
+        setLoadingMessage("");
+        return;
+      }
+
+      const result = (await createResponse.json()) as {
+        conversationId: string;
+      };
+      if (!result.conversationId) {
+        console.error("Error creating conversation");
         setLoadingMessage("");
         return;
       }

@@ -1,4 +1,4 @@
-import type { UsersRepository, UserIdentity } from "@/domain/users/types";
+import type { UsersRepository, UserIdentity } from "@chatbot-rag/domain/users";
 
 export class UserService {
   constructor(private readonly usersRepo: UsersRepository) {}

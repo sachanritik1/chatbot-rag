@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, RefreshCw, Edit, GitBranch, Check, Loader2 } from "lucide-react";
-import { createBranch } from "@/actions/branches";
 import {
   Tooltip,
   TooltipContent,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ALLOWED_MODEL_IDS, DEFAULT_MODEL_ID } from "@/config/models";
 import type { ModelId } from "@/config/models";
+import { useRouter } from "next/navigation";
 
 interface MessageActionsProps {
   role: "user" | "bot";
@@ -32,6 +32,7 @@ export function MessageActions({
   onRetry,
   onEdit,
 }: MessageActionsProps) {
+  const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
   const [isBranching, setIsBranching] = useState(false);
   const [showModelSelect, setShowModelSelect] = useState(false);
@@ -73,11 +74,20 @@ export function MessageActions({
     } else if (actionType === "branch" && messageId && conversationId) {
       setIsBranching(true);
       try {
-        await createBranch({
-          conversationId,
-          messageId,
-          selectedModel,
+        const response = await fetch("/api/branches", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId,
+            messageId,
+            selectedModel,
+          }),
         });
+
+        if (response.ok) {
+          const result = (await response.json()) as { branchId: string };
+          router.push(`/chat/${result.branchId}`);
+        }
       } catch (error) {
         console.error("Error creating branch:", error);
       } finally {

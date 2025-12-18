@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GitBranch, Loader2 } from "lucide-react";
-import { createBranch } from "@/actions/branches";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 interface BranchButtonProps {
   conversationId: string;
@@ -23,11 +23,21 @@ export function BranchButton({
   className,
 }: BranchButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleBranch = async () => {
     setIsLoading(true);
     try {
-      await createBranch({ conversationId, messageId });
+      const response = await fetch("/api/branches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId, messageId }),
+      });
+
+      if (response.ok) {
+        const result = (await response.json()) as { branchId: string };
+        router.push(`/chat/${result.branchId}`);
+      }
     } catch (error) {
       console.error("Error creating branch:", error);
     } finally {

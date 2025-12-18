@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import ChatPage from "../chat";
 import ChatHeader from "@/components/ChatHeader";
 //
-import { ConversationService } from "@/domain/conversations/ConversationService";
-import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
-import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
+import { ConversationService } from "@chatbot-rag/domain/conversations";
+import { createServerRepositories } from "@/utils/repositories";
 import type { ModelId } from "@/config/models";
 
 export const dynamic = "force-dynamic";
@@ -22,10 +21,9 @@ interface Props {
 // Dynamic metadata based on conversationId
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { conversationId } = await params;
-  const convService = new ConversationService(
-    new SupabaseConversationsRepository(),
-    new SupabaseChatsRepository(),
-  );
+  const { conversations: convRepo, chats: chatsRepo } =
+    await createServerRepositories();
+  const convService = new ConversationService(convRepo, chatsRepo);
   const conversation = (await convService.getById(conversationId)) as {
     title: string;
   } | null;
@@ -45,18 +43,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const Page = async ({ params, searchParams }: Props) => {
   const { conversationId } = await params;
   const { regenerate, model } = await searchParams;
-  const convService = new ConversationService(
-    new SupabaseConversationsRepository(),
-    new SupabaseChatsRepository(),
-  );
+  const { conversations: convRepo2, chats: chatsRepo2 } =
+    await createServerRepositories();
+  const convService = new ConversationService(convRepo2, chatsRepo2);
   const conversation = (await convService.getById(conversationId)) as {
     title: string;
   } | null;
   if (!conversation) {
     return <ChatPage />;
   }
-  const chatsRepo = new SupabaseChatsRepository();
-  const recent = await chatsRepo.getRecent(conversationId, 10);
+  const recent = await chatsRepo2.getRecent(conversationId, 10);
   const messages = recent.data.slice().map((chat) => ({
     id: chat.id,
     role: chat.sender === "assistant" ? ("bot" as const) : ("user" as const),

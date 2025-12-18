@@ -1,0 +1,24 @@
+{
+  "name": "@chatbot-rag/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chatbot-rag/shared": "workspace:*",
+    "@chatbot-rag/validators": "workspace:*"
+  },
+  "devDependencies": {
+    "@chatbot-rag/eslint-config": "workspace:*",
+    "@chatbot-rag/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

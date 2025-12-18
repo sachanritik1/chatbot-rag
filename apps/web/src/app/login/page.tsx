@@ -1,6 +1,6 @@
 import { AuthForm } from "@/components/AuthForm";
-import { UserService } from "@/domain/users/UserService";
-import { SupabaseUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { UserService } from "@chatbot-rag/domain/users";
+import { createServerRepositories } from "@/utils/repositories";
 import { redirect } from "next/navigation";
 import LoginThemeToggle from "@/components/LoginThemeToggle";
 import Link from "next/link";
@@ -11,7 +11,8 @@ export default async function Login({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const userService = new UserService(new SupabaseUsersRepository());
+  const { users: usersRepo } = await createServerRepositories();
+  const userService = new UserService(usersRepo);
   const current = await userService.requireCurrentUser().catch(() => null);
   if (current?.id) redirect("/chat");
   return (

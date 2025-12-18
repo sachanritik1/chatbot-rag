@@ -1,5 +1,5 @@
-import type { ConversationsRepository } from "@/domain/conversations/types";
-import type { ChatsRepository } from "@/domain/chat/types";
+import type { ConversationsRepository } from "@chatbot-rag/domain/conversations";
+import type { ChatsRepository } from "@chatbot-rag/domain/chat";
 
 export class ConversationService {
   constructor(
@@ -34,5 +34,14 @@ export class ConversationService {
 
   getById(conversationId: string) {
     return this.conversations.getById(conversationId);
+  }
+
+  async updateTitle(userId: string, conversationId: string, title: string) {
+    const owns = await this.conversations.verifyOwnership(
+      userId,
+      conversationId,
+    );
+    if (!owns) throw new Error("Not found");
+    return this.conversations.updateTitle(conversationId, title);
   }
 }

@@ -1,6 +1,6 @@
-import type { ChatsRepository } from "@/domain/chat/types";
+import type { ChatsRepository } from "@chatbot-rag/domain/chat";
 import { createClient } from "@/utils/supabase/server";
-import type { ChatHistory } from "@/domain/chat/models";
+import type { ChatHistory } from "@chatbot-rag/domain/chat";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export class SupabaseChatsRepository implements ChatsRepository {

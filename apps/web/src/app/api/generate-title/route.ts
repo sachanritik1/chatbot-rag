@@ -1,7 +1,7 @@
 import { generateTitle } from "@/lib/llm";
 import { NextResponse } from "next/server";
-import { UserService } from "@/domain/users/UserService";
-import { createAPIUsersRepository } from "@/infrastructure/repos/UsersRepository";
+import { UserService } from "@chatbot-rag/domain/users";
+import { createAPIUsersRepository } from "@/utils/repositories";
 
 export async function POST(request: Request) {
   try {

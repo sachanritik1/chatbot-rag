@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import type { AuthRepository, Credentials } from "@/domain/auth/types";
+import type { AuthRepository, Credentials } from "@chatbot-rag/domain/auth";
 
 export class SupabaseAuthRepository implements AuthRepository {
   async signInWithPassword({ email, password }: Credentials): Promise<void> {

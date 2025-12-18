@@ -1,50 +1,22 @@
-import { z } from "zod";
-import { UserService } from "@/domain/users/UserService";
-import { SupabaseChatsRepository } from "@/infrastructure/repos/ChatsRepository";
-import { SupabaseConversationsRepository } from "@/infrastructure/repos/ConversationsRepository";
-import { createAPIUsersRepository } from "@/infrastructure/repos/UsersRepository";
-import { createAPIClient } from "@/utils/supabase/api";
-import { ConversationService } from "@/domain/conversations/ConversationService";
-
-const deleteAfterMessageSchema = z.object({
-  messageId: z.string().uuid(),
-});
+import { deleteAfterMessageSchema } from "@chatbot-rag/validators";
+import { SupabaseChatsRepository } from "@/utils/repositories";
+import { composeAuthValidation } from "@/lib/api/middleware";
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id: conversationId } = await params;
-    const body = (await req.json()) as unknown;
-    const parsedData = deleteAfterMessageSchema.safeParse(body);
+  const { id: conversationId } = await params;
 
-    if (!parsedData.success) {
-      return Response.json(
-        { error: parsedData.error.message },
-        { status: 400 },
-      );
-    }
-
-    const { messageId } = parsedData.data;
-
-    // Create API client with auth context
-    const supabaseClient = await createAPIClient(req);
-
-    // Verify user is authenticated
-    const usersRepo = await createAPIUsersRepository(req);
-    const userService = new UserService(usersRepo);
-    const user = await userService.requireCurrentUser().catch(() => null);
-
-    if (!user?.id) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const handler = composeAuthValidation(deleteAfterMessageSchema)(async (
+    _req,
+    data,
+    { user, container },
+  ) => {
+    const { messageId } = data;
 
     // Verify conversation ownership
-    const convService = new ConversationService(
-      new SupabaseConversationsRepository(supabaseClient),
-      new SupabaseChatsRepository(supabaseClient),
-    );
+    const convService = container.get("ConversationService");
     const owns = await convService.verifyOwnership(user.id, conversationId);
 
     if (!owns) {
@@ -55,7 +27,8 @@ export async function DELETE(
     }
 
     // Delete messages after the specified message
-    const chatsRepo = new SupabaseChatsRepository(supabaseClient);
+    const supabase = container.getSupabase();
+    const chatsRepo = new SupabaseChatsRepository(supabase);
     const result = await chatsRepo.deleteAfterMessage(
       conversationId,
       messageId,
@@ -66,14 +39,7 @@ export async function DELETE(
     }
 
     return Response.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("Error in deleteMessagesAfter:", error);
-    return Response.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to delete messages",
-      },
-      { status: 500 },
-    );
-  }
+  });
+
+  return handler(req);
 }
