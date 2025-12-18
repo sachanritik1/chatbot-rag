@@ -7,7 +7,9 @@ import type {
   ConversationTree,
 } from "@chatbot-rag/domain/conversations";
 
-export class SupabaseConversationsRepository<T extends SupabaseClient = SupabaseClient> implements ConversationsRepository {
+export class SupabaseConversationsRepository<
+  T extends SupabaseClient = SupabaseClient,
+> implements ConversationsRepository {
   constructor(private readonly supabase: T) {}
 
   async create(userId: string, title: string): Promise<{ id: string } | null> {

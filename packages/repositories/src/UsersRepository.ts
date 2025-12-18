@@ -2,7 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { UserIdentity, UsersRepository } from "@chatbot-rag/domain/users";
 
-export class SupabaseUsersRepository<T extends SupabaseClient = SupabaseClient> implements UsersRepository {
+export class SupabaseUsersRepository<
+  T extends SupabaseClient = SupabaseClient,
+> implements UsersRepository {
   constructor(private readonly supabase: T) {}
 
   async getCurrentUser(): Promise<UserIdentity | null> {

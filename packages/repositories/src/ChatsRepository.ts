@@ -2,7 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ChatHistory, ChatsRepository } from "@chatbot-rag/domain/chat";
 
-export class SupabaseChatsRepository<T extends SupabaseClient = SupabaseClient> implements ChatsRepository {
+export class SupabaseChatsRepository<
+  T extends SupabaseClient = SupabaseClient,
+> implements ChatsRepository {
   constructor(private readonly supabase: T) {}
 
   async getById(messageId: string) {
